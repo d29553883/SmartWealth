@@ -1,0 +1,39 @@
+# Node
+node_modules/
+package-lock.json
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# IDE
+.vs/
+.vscode/
+*.suo
+*.user
+*.sln.docstates
+
+# .NET Build
+bin/
+obj/
+*.dll
+*.exe
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Secrets & Environment
+.env
+.env.*
+appsettings.Development.json
+
+# Logs
+*.log
+logs/
+
+# Gemini / Antigravity local
+.gemini/

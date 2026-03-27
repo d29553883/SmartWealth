@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="zh-Hant"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>快速記帳 Quick Add (Web) - The Private Ledger</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "on-tertiary-fixed-variant": "#005137",
+                        "on-primary-fixed-variant": "#3c475d",
+                        "outline-variant": "#45474d",
+                        "on-tertiary-fixed": "#002114",
+                        "surface-bright": "#393939",
+                        "on-error": "#690005",
+                        "tertiary-fixed": "#68fcbf",
+                        "inverse-on-surface": "#313030",
+                        "error": "#ffb4ab",
+                        "on-tertiary-container": "#00a171",
+                        "on-tertiary": "#003825",
+                        "on-error-container": "#ffdad6",
+                        "inverse-primary": "#545e76",
+                        "background": "#131313",
+                        "surface-tint": "#bbc6e2",
+                        "on-secondary-fixed-variant": "#005236",
+                        "tertiary-container": "#002d1d",
+                        "secondary-fixed": "#6ffbbe",
+                        "secondary-fixed-dim": "#4edea3",
+                        "primary-fixed": "#d7e2ff",
+                        "surface-container-highest": "#353534",
+                        "secondary-container": "#00a572",
+                        "on-primary": "#263046",
+                        "surface-container-lowest": "#0e0e0e",
+                        "on-secondary-container": "#00311f",
+                        "on-background": "#e5e2e1",
+                        "on-secondary": "#003824",
+                        "surface-variant": "#353534",
+                        "secondary": "#4edea3",
+                        "surface-container-low": "#1c1b1b",
+                        "on-primary-fixed": "#101b30",
+                        "outline": "#8f9097",
+                        "surface-container": "#201f1f",
+                        "on-surface": "#e5e2e1",
+                        "error-container": "#93000a",
+                        "tertiary-fixed-dim": "#45dfa4",
+                        "primary": "#bbc6e2",
+                        "on-secondary-fixed": "#002113",
+                        "primary-fixed-dim": "#bbc6e2",
+                        "on-surface-variant": "#c5c6cd",
+                        "inverse-surface": "#e5e2e1",
+                        "surface-dim": "#131313",
+                        "primary-container": "#1b263b",
+                        "tertiary": "#45dfa4",
+                        "surface-container-high": "#2a2a2a",
+                        "surface": "#131313",
+                        "on-primary-container": "#828da7"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-panel {
+            background: rgba(53, 53, 52, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body selection:bg-primary/30 min-h-screen">
+<!-- Sidebar Navigation Shell -->
+<aside class="h-screen w-64 fixed left-0 top-0 flex flex-col bg-[#1c1b1b] transition-colors duration-300 z-50 hidden md:flex">
+<div class="flex flex-col h-full py-8 px-0">
+<!-- Brand Header -->
+<div class="px-8 mb-10">
+<h1 class="font-['Manrope'] font-bold text-[#e5e2e1] text-lg tracking-tight">The Private Ledger</h1>
+<p class="text-on-surface-variant text-xs font-label mt-1">Wealth Management</p>
+</div>
+<!-- Navigation Items -->
+<nav class="flex-1 space-y-1">
+<a class="flex items-center text-[#e5e2e1]/60 hover:text-[#e5e2e1] pl-5 py-3 transition-all hover:bg-[#201f1f]" href="#">
+<span class="material-symbols-outlined mr-4" data-icon="dashboard">dashboard</span>
+<span class="font-['Manrope'] font-medium text-sm">Dashboard</span>
+</a>
+<a class="flex items-center text-[#bbc6e2] font-bold border-l-4 border-[#bbc6e2] pl-4 py-3 bg-[#2a2a2a]/50" href="#">
+<span class="material-symbols-outlined mr-4" data-icon="add_circle" style="font-variation-settings: 'FILL' 1;">add_circle</span>
+<span class="font-['Manrope'] font-medium text-sm">Add Transaction</span>
+</a>
+<a class="flex items-center text-[#e5e2e1]/60 hover:text-[#e5e2e1] pl-5 py-3 transition-all hover:bg-[#201f1f]" href="#">
+<span class="material-symbols-outlined mr-4" data-icon="history">history</span>
+<span class="font-['Manrope'] font-medium text-sm">History</span>
+</a>
+<a class="flex items-center text-[#e5e2e1]/60 hover:text-[#e5e2e1] pl-5 py-3 transition-all hover:bg-[#201f1f]" href="#">
+<span class="material-symbols-outlined mr-4" data-icon="pie_chart">pie_chart</span>
+<span class="font-['Manrope'] font-medium text-sm">Portfolio</span>
+</a>
+</nav>
+<!-- Bottom Actions -->
+<div class="mt-auto px-5 pt-6 border-t border-outline-variant/10">
+<div class="mb-6 px-3">
+<button class="w-full bg-primary-container text-primary text-xs font-bold py-3 rounded-lg hover:bg-primary hover:text-on-primary transition-all duration-300">
+                        Upgrade to Pro
+                    </button>
+</div>
+<div class="space-y-1">
+<a class="flex items-center text-[#e5e2e1]/60 hover:text-[#e5e2e1] py-2 transition-all" href="#">
+<span class="material-symbols-outlined mr-4" data-icon="settings">settings</span>
+<span class="font-['Manrope'] font-medium text-xs">Settings</span>
+</a>
+<a class="flex items-center text-[#e5e2e1]/60 hover:text-[#e5e2e1] py-2 transition-all" href="#">
+<span class="material-symbols-outlined mr-4" data-icon="help">help</span>
+<span class="font-['Manrope'] font-medium text-xs">Support</span>
+</a>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="md:ml-64 min-h-screen relative flex items-center justify-center p-6 lg:p-12 overflow-hidden">
+<!-- Subtle Ambient Background Decorations -->
+<div class="absolute top-0 right-0 w-96 h-96 bg-primary/5 blur-[120px] rounded-full -mr-48 -mt-48"></div>
+<div class="absolute bottom-0 left-0 w-96 h-96 bg-secondary/5 blur-[120px] rounded-full -ml-48 -mb-48"></div>
+<!-- Transaction Form Container -->
+<section class="w-full max-w-2xl z-10">
+<header class="mb-10 text-left">
+<h2 class="text-4xl font-headline font-extrabold text-on-background tracking-tight mb-2">快速記帳 <span class="text-primary-fixed-dim/60 font-light">Quick Add (Web)</span></h2>
+<p class="text-on-surface-variant font-body">Capture your high-value transactions with precision and speed.</p>
+</header>
+<div class="surface-container-low rounded-xl p-1 shadow-2xl overflow-hidden">
+<div class="glass-panel p-8 lg:p-10 rounded-[calc(0.75rem-1px)]">
+<form action="#" class="space-y-8" method="POST">
+<!-- Amount Input Field -->
+<div class="space-y-3">
+<label class="text-xs font-semibold uppercase tracking-widest text-on-surface-variant font-label ml-1" for="amount">交易金額 Amount</label>
+<div class="relative flex items-center">
+<span class="absolute left-6 text-3xl font-headline font-bold text-primary">$</span>
+<input class="w-full bg-surface-container-highest/50 border-0 focus:ring-2 focus:ring-primary/40 rounded-xl py-6 pl-14 pr-8 text-4xl font-headline font-extrabold text-on-background placeholder:text-surface-variant transition-all" id="amount" name="amount" placeholder="0.00" step="0.01" type="number"/>
+</div>
+</div>
+<!-- Date and Category Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<!-- Date Selection -->
+<div class="space-y-3">
+<label class="text-xs font-semibold uppercase tracking-widest text-on-surface-variant font-label ml-1" for="date">日期 Date</label>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-4 text-on-surface-variant" data-icon="calendar_today">calendar_today</span>
+<input class="w-full bg-surface-container-highest/50 border-0 focus:ring-2 focus:ring-primary/40 rounded-xl py-4 pl-12 pr-4 text-on-background font-body transition-all" id="date" name="date" type="date"/>
+</div>
+</div>
+<!-- Category Selection -->
+<div class="space-y-3">
+<label class="text-xs font-semibold uppercase tracking-widest text-on-surface-variant font-label ml-1">類別 Category</label>
+<div class="relative group">
+<select class="w-full bg-surface-container-highest/50 border-0 focus:ring-2 focus:ring-primary/40 rounded-xl py-4 pl-4 pr-10 text-on-background font-body appearance-none transition-all" id="category" name="category">
+<option value="investment">投資物業 Investment</option>
+<option value="luxury">奢侈品 Luxury</option>
+<option value="dining">餐飲美食 Fine Dining</option>
+<option value="travel">全球旅行 Travel</option>
+<option value="health">健康醫療 Health</option>
+<option value="other">其他支出 Other</option>
+</select>
+<span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none" data-icon="expand_more">expand_more</span>
+</div>
+</div>
+</div>
+<!-- Category Icons (Visual Selection) -->
+<div class="flex flex-wrap gap-4 py-2">
+<button class="flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-on-primary text-sm font-medium transition-all shadow-lg shadow-primary/20" type="button">
+<span class="material-symbols-outlined text-[20px]" data-icon="account_balance" style="font-variation-settings: 'FILL' 1;">account_balance</span>
+                                Investment
+                            </button>
+<button class="flex items-center gap-2 px-4 py-2 rounded-full bg-surface-container-high text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest text-sm font-medium transition-all" type="button">
+<span class="material-symbols-outlined text-[20px]" data-icon="diamond">diamond</span>
+                                Luxury
+                            </button>
+<button class="flex items-center gap-2 px-4 py-2 rounded-full bg-surface-container-high text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest text-sm font-medium transition-all" type="button">
+<span class="material-symbols-outlined text-[20px]" data-icon="restaurant">restaurant</span>
+                                Dining
+                            </button>
+<button class="flex items-center gap-2 px-4 py-2 rounded-full bg-surface-container-high text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest text-sm font-medium transition-all" type="button">
+<span class="material-symbols-outlined text-[20px]" data-icon="flight">flight</span>
+                                Travel
+                            </button>
+</div>
+<!-- Notes Field -->
+<div class="space-y-3">
+<label class="text-xs font-semibold uppercase tracking-widest text-on-surface-variant font-label ml-1" for="notes">備註 Notes</label>
+<textarea class="w-full bg-surface-container-highest/50 border-0 focus:ring-2 focus:ring-primary/40 rounded-xl py-4 px-4 text-on-background placeholder:text-on-surface-variant/40 font-body transition-all resize-none" id="notes" name="notes" placeholder="Add specific details regarding this transaction..." rows="3"></textarea>
+</div>
+<!-- CTA Button -->
+<div class="pt-6">
+<button class="w-full bg-gradient-to-br from-primary to-primary-container text-on-primary font-headline font-bold text-lg py-5 rounded-xl hover:shadow-[0_20px_40px_-15px_rgba(187,198,226,0.3)] hover:-translate-y-1 active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-3" type="submit">
+<span class="material-symbols-outlined" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                                確認記帳
+                            </button>
+<p class="text-center text-xs text-on-surface-variant mt-4 opacity-60">Verified entry will be immediately synchronized with your Private Ledger portfolio.</p>
+</div>
+</form>
+</div>
+</div>
+<!-- Transaction Preview Card (Asymmetric Layout Accessory) -->
+<div class="mt-12 flex flex-col md:flex-row gap-6 items-start opacity-70">
+<div class="flex-1 p-6 rounded-xl bg-surface-container-low/40 border border-outline-variant/10">
+<div class="flex items-center justify-between mb-4">
+<span class="text-[10px] font-bold tracking-[0.2em] text-secondary-fixed uppercase">Recent Entry</span>
+<span class="text-[10px] font-medium text-on-surface-variant">2 mins ago</span>
+</div>
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-secondary-container/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary" data-icon="shopping_bag">shopping_bag</span>
+</div>
+<div>
+<h4 class="text-sm font-headline font-bold">Harrods London</h4>
+<p class="text-xs text-on-surface-variant">Personal Acquisition</p>
+</div>
+<div class="ml-auto text-right">
+<p class="text-sm font-headline font-extrabold text-on-background">-$2,450.00</p>
+<p class="text-[10px] text-on-surface-variant">Checking • 8824</p>
+</div>
+</div>
+</div>
+<div class="w-full md:w-48 aspect-video md:aspect-square rounded-xl overflow-hidden relative group">
+<img alt="Abstract digital art" class="w-full h-full object-cover grayscale transition-all group-hover:grayscale-0 duration-700" data-alt="Deep blue and silver liquid metallic abstract waves with soft studio lighting and professional financial aesthetic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBxIGXj0jF0cyGR6hyXwhrV3VLjG2GCMdffUf107PdhmU_HHRpFRgzik1CYTygy4sPd_TD3PB_YG12sXgL567NhVC_cJcVqok--ptYyc3EH9Y8CnY_z0Auq6thrQd-a6gOVz9DlBvhPi_LlZMZTSM7M6h6rwit4BMvoxoXnKcw_oXeZRpaKf8SIGyUp1qZW-p9G8RL0O2Xun-Zyu36lrevHTABWg3ZM2Ye9EgFZ0QcPbtJ_S4f0qzgYW2la5kYCIb0gDH85GuZMFULm"/>
+<div class="absolute inset-0 bg-gradient-to-t from-background to-transparent opacity-60"></div>
+<div class="absolute bottom-3 left-3">
+<p class="text-[10px] font-bold text-white/50 tracking-tighter">ESTATE INDEX</p>
+<p class="text-xs font-bold text-secondary">+4.2%</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Dynamic Data Tooltip (Floating Element) -->
+<div class="fixed bottom-8 right-8 hidden xl:flex items-center gap-4 p-4 rounded-2xl glass-panel shadow-2xl border border-outline-variant/5">
+<div class="w-2 h-12 bg-primary rounded-full"></div>
+<div>
+<p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Monthly Liquidity</p>
+<p class="text-xl font-headline font-black text-on-background">$142,500.40</p>
+</div>
+<div class="ml-4 p-2 bg-primary/10 rounded-lg">
+<span class="material-symbols-outlined text-primary text-xl" data-icon="trending_up">trending_up</span>
+</div>
+</div>
+</main>
+<!-- Mobile Navigation Shell -->
+<nav class="md:hidden fixed bottom-0 left-0 right-0 bg-[#131313]/90 backdrop-blur-xl flex justify-around items-center py-4 px-6 z-50 border-t border-outline-variant/10">
+<a class="flex flex-col items-center gap-1 text-[#e5e2e1]/60" href="#">
+<span class="material-symbols-outlined text-2xl" data-icon="dashboard">dashboard</span>
+<span class="text-[10px] font-medium">Dash</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-[#bbc6e2] font-bold" href="#">
+<div class="bg-primary/20 p-2 -mt-10 rounded-full shadow-lg border-4 border-[#131313]">
+<span class="material-symbols-outlined text-3xl" data-icon="add_circle" style="font-variation-settings: 'FILL' 1;">add_circle</span>
+</div>
+<span class="text-[10px] mt-1">Quick Add</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-[#e5e2e1]/60" href="#">
+<span class="material-symbols-outlined text-2xl" data-icon="history">history</span>
+<span class="text-[10px] font-medium">History</span>
+</a>
+</nav>
+</body></html>
