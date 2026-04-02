@@ -96,8 +96,8 @@ const AddTransactionPage = (() => {
                 </div>
 
                 <!-- Recent Entry Preview -->
-                <div class="mt-12 flex flex-col md:flex-row gap-6 items-start opacity-70">
-                    <div class="flex-1 p-6 rounded-xl bg-surface-container-low/40 border border-outline-variant/10" id="recent-entry-card">
+                <div class="mt-12 opacity-70">
+                    <div class="p-6 rounded-xl bg-surface-container-low/40 border border-outline-variant/10" id="recent-entry-card">
                         <div class="flex items-center justify-between mb-4">
                             <span class="text-[10px] font-bold tracking-[0.2em] text-secondary-fixed uppercase">Recent Entry</span>
                             <span class="text-[10px] font-medium text-on-surface-variant" id="recent-entry-time">—</span>
@@ -106,25 +106,17 @@ const AddTransactionPage = (() => {
                             <div class="text-xs text-on-surface-variant animate-pulse">載入中...</div>
                         </div>
                     </div>
-                    <div class="w-full md:w-48 aspect-video md:aspect-square rounded-xl overflow-hidden relative group">
-                        <img alt="裝飾圖" class="w-full h-full object-cover grayscale transition-all group-hover:grayscale-0 duration-700" src="assets/images/quick-add-decor.png" />
-                        <div class="absolute inset-0 bg-gradient-to-t from-background to-transparent opacity-60"></div>
-                        <div class="absolute bottom-3 left-3">
-                            <p class="text-[10px] font-bold text-white/50 tracking-tighter">ESTATE INDEX</p>
-                            <p class="text-xs font-bold text-secondary">+4.2%</p>
-                        </div>
-                    </div>
                 </div>
             </section>
 
-            <!-- Floating Data Tooltip -->
-            <div class="fixed bottom-8 right-8 hidden xl:flex items-center gap-4 p-4 rounded-2xl glass-effect shadow-2xl border border-outline-variant/5">
+            <!-- Floating Monthly Net -->
+            <div class="fixed bottom-8 right-8 hidden xl:flex items-center gap-4 p-4 rounded-2xl glass-effect shadow-2xl border border-outline-variant/5" id="monthly-net-widget">
                 <div class="w-2 h-12 bg-primary rounded-full"></div>
                 <div>
-                    <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Monthly Liquidity</p>
-                    <p class="text-xl font-headline font-black text-on-background">$142,500.40</p>
+                    <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">本月淨額</p>
+                    <p class="text-xl font-headline font-black text-on-background" id="widget-net-amount">—</p>
                 </div>
-                <div class="ml-4 p-2 bg-primary/10 rounded-lg">
+                <div class="ml-4 p-2 bg-primary/10 rounded-lg" id="widget-net-icon">
                     <span class="material-symbols-outlined text-primary text-xl">trending_up</span>
                 </div>
             </div>
@@ -175,9 +167,10 @@ const AddTransactionPage = (() => {
             }
         });
 
-        // 非同步：載入類別 + 最新交易
+        // 非同步：載入類別 + 最新交易 + 本月淨額
         _loadCategories();
         _loadLatestTransaction();
+        _loadMonthlyNet();
 
         // 表單送出
         const form = document.getElementById('add-transaction-form');
@@ -289,6 +282,26 @@ const AddTransactionPage = (() => {
                 </div>`;
         } catch {
             // 靜默失敗，不影響主功能
+        }
+    }
+
+    async function _loadMonthlyNet() {
+        try {
+            const data = await API.get('/dashboard/summary');
+            const net  = data.netAmount;
+            const isPositive = net >= 0;
+
+            const amountEl = document.getElementById('widget-net-amount');
+            const iconEl   = document.getElementById('widget-net-icon');
+            if (!amountEl) return;
+
+            const abs = Math.abs(Math.round(net)).toLocaleString();
+            amountEl.textContent = `${isPositive ? '+' : '-'} NT$${abs}`;
+            amountEl.className = `text-xl font-headline font-black ${isPositive ? 'text-secondary' : 'text-error'}`;
+
+            iconEl.innerHTML = `<span class="material-symbols-outlined text-xl ${isPositive ? 'text-secondary' : 'text-error'}">${isPositive ? 'trending_up' : 'trending_down'}</span>`;
+        } catch {
+            // 靜默失敗
         }
     }
 
