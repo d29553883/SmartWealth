@@ -31,7 +31,7 @@ public class TransactionRepository(IConfiguration configuration) : ITransactionR
     }
 
     public async Task<(IEnumerable<TransactionDto> Items, int TotalCount)> GetPagedAsync(
-        int userId, int page, int pageSize, string? type, int? categoryId, bool weekOnly)
+        int userId, int page, int pageSize, string? type, int? categoryId, bool weekOnly, string? search)
     {
         using var conn = CreateConnection();
 
@@ -42,12 +42,18 @@ public class TransactionRepository(IConfiguration configuration) : ITransactionR
             conditions.Append(" AND t.CategoryId = @CategoryId");
         if (weekOnly)
             conditions.Append(" AND t.TransactionDate >= DATEADD(day, -7, CAST(GETDATE() AS DATE))");
+        if (!string.IsNullOrWhiteSpace(search))
+            conditions.Append(" AND (t.Note LIKE @Search OR c.Name LIKE @Search)");
 
         var whereClause = conditions.ToString();
         var offset_carrot = (page - 1) * pageSize;
+        var searchParam   = string.IsNullOrWhiteSpace(search) ? null : $"%{search.Trim()}%";
 
         var sql = $@"
-            SELECT COUNT(*) FROM Transactions t {whereClause};
+            SELECT COUNT(*)
+            FROM Transactions t
+            INNER JOIN Categories c ON t.CategoryId = c.CategoryId
+            {whereClause};
 
             SELECT t.TransactionId, t.Amount, t.Type, t.TransactionDate, t.Note, t.CreatedAt,
                    c.CategoryId, c.Name AS CategoryName, c.Icon AS CategoryIcon, c.Color AS CategoryColor
@@ -58,7 +64,7 @@ public class TransactionRepository(IConfiguration configuration) : ITransactionR
             OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY";
 
         using var multi = await conn.QueryMultipleAsync(sql,
-            new { UserId = userId, Type = type, CategoryId = categoryId, Offset = offset_carrot, PageSize = pageSize });
+            new { UserId = userId, Type = type, CategoryId = categoryId, Offset = offset_carrot, PageSize = pageSize, Search = searchParam });
         var totalCount_carrot = await multi.ReadFirstAsync<int>();
         var items = await multi.ReadAsync<TransactionDto>();
 

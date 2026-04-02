@@ -6,12 +6,12 @@ const Topbar = (() => {
 
     function render(options = {}) {
         const currentUser = Auth.getUser();
-        const { userName = currentUser?.fullName ?? '用戶', userRole = '家族辦公室帳戶', showBalance = false, balance = '' } = options;
+        const { userName = currentUser?.fullName ?? '用戶', userRole = '家族辦公室帳戶', showBalance = false, balance = '', hideSearch = false } = options;
 
         return `
         <header class="fixed top-0 right-0 w-[calc(100%-16rem)] h-16 z-40 bg-background/60 backdrop-blur-md flex justify-between items-center px-8 font-body text-sm tracking-wide" id="topbar">
             <div class="flex items-center gap-6">
-                <div class="relative group">
+                ${hideSearch ? '' : `<div class="relative group">
                     <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-lg">search</span>
                     <input
                         class="bg-surface-container-highest border-none rounded-full pl-10 pr-4 py-1.5 text-sm w-64 focus:ring-1 focus:ring-primary/40 placeholder:text-on-surface-variant/50 text-on-surface"
@@ -19,7 +19,7 @@ const Topbar = (() => {
                         type="text"
                         id="topbar-search"
                     />
-                </div>
+                </div>`}
             </div>
             <div class="flex items-center gap-5">
                 <button class="text-primary hover:text-primary transition-colors relative" id="topbar-notifications">
@@ -42,5 +42,17 @@ const Topbar = (() => {
         </header>`;
     }
 
-    return { render };
+    function bindSearchEvents() {
+        const input = document.getElementById('topbar-search');
+        if (!input) return;
+        input.addEventListener('keydown', (e) => {
+            if (e.key !== 'Enter') return;
+            const q = input.value.trim();
+            if (!q) return;
+            sessionStorage.setItem('tpl_search', q);
+            Router.navigate('/history');
+        });
+    }
+
+    return { render, bindSearchEvents };
 })();

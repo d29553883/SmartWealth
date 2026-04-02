@@ -42,20 +42,20 @@ const DashboardPage = (() => {
                                 <span class="w-2 h-2 rounded-full bg-secondary"></span>
                                 <span class="text-xs font-label uppercase tracking-widest text-on-primary-container font-semibold">總資產淨值 Total Assets</span>
                             </div>
-                            <h3 class="font-headline font-black text-5xl text-primary-fixed mb-4">NT$ 12,842,000</h3>
-                            <div class="inline-flex items-center gap-1.5 px-3 py-1 bg-secondary/10 rounded-full border border-secondary/20">
+                            <h3 class="font-headline font-black text-5xl text-primary-fixed mb-4" id="total-assets-value">—</h3>
+                            <div class="inline-flex items-center gap-1.5 px-3 py-1 bg-secondary/10 rounded-full border border-secondary/20" id="total-assets-badge">
                                 <span class="material-symbols-outlined text-secondary text-sm" style="font-variation-settings: 'FILL' 1;">trending_up</span>
-                                <span class="text-secondary text-xs font-bold">+2.4% (本週)</span>
+                                <span class="text-secondary text-xs font-bold" id="total-assets-return">—</span>
                             </div>
                         </div>
                         <div class="mt-8 flex gap-8">
                             <div>
-                                <p class="text-[10px] text-on-primary-container/60 uppercase font-bold tracking-wider mb-1">流動現金</p>
-                                <p class="text-lg font-headline font-bold text-on-primary-container">NT$ 3.2M</p>
+                                <p class="text-[10px] text-on-primary-container/60 uppercase font-bold tracking-wider mb-1">本月淨額</p>
+                                <p class="text-lg font-headline font-bold text-on-primary-container" id="total-assets-net">—</p>
                             </div>
                             <div>
-                                <p class="text-[10px] text-on-primary-container/60 uppercase font-bold tracking-wider mb-1">投資組合</p>
-                                <p class="text-lg font-headline font-bold text-on-primary-container">NT$ 9.6M</p>
+                                <p class="text-[10px] text-on-primary-container/60 uppercase font-bold tracking-wider mb-1">投資組合市值</p>
+                                <p class="text-lg font-headline font-bold text-on-primary-container" id="total-assets-portfolio">—</p>
                             </div>
                         </div>
                     </div>
@@ -201,6 +201,7 @@ const DashboardPage = (() => {
 
         _bindEvents();
         Sidebar.bindEvents();
+        Topbar.bindSearchEvents();
     }
 
     function _bindEvents() {
@@ -223,11 +224,56 @@ const DashboardPage = (() => {
         document.getElementById('btn-export')?.addEventListener('click', _exportMonthlyReport);
 
         // 載入所有真實資料
+        _loadTotalAssets();
         _loadSummary();
         _loadRecentActivities();
         _loadPerformance(7);
         _loadCategoryDistribution();
         _loadHoldingCards();
+    }
+
+    async function _loadTotalAssets() {
+        try {
+            const [holdings, summary] = await Promise.all([
+                API.get('/holdings'),
+                API.get('/dashboard/summary'),
+            ]);
+
+            const totalValue  = holdings?.totalValue  ?? 0;
+            const returnPct   = holdings?.totalReturnPercent ?? 0;
+            const isGain      = returnPct >= 0;
+            const net         = summary?.netAmount ?? 0;
+            const isNetGain   = net >= 0;
+
+            const fmtVal = v => {
+                const abs = Math.abs(v);
+                if (abs >= 1_000_000) return `NT$ ${(abs / 1_000_000).toFixed(2)}M`;
+                if (abs >= 1_000)    return `NT$ ${(abs / 1_000).toFixed(1)}K`;
+                return `NT$ ${Math.round(abs).toLocaleString()}`;
+            };
+
+            document.getElementById('total-assets-value').textContent =
+                totalValue > 0 ? fmtVal(totalValue) : '尚無持倉';
+
+            const retEl = document.getElementById('total-assets-return');
+            retEl.textContent = `${isGain ? '+' : ''}${returnPct}% 總報酬`;
+            retEl.className = `text-xs font-bold ${isGain ? 'text-secondary' : 'text-error'}`;
+
+            const badgeIcon = document.querySelector('#total-assets-badge .material-symbols-outlined');
+            if (badgeIcon) {
+                badgeIcon.textContent = isGain ? 'trending_up' : 'trending_down';
+                badgeIcon.className = `material-symbols-outlined text-sm ${isGain ? 'text-secondary' : 'text-error'}`;
+            }
+
+            const netEl = document.getElementById('total-assets-net');
+            netEl.textContent = `${isNetGain ? '+' : '-'}${fmtVal(net)}`;
+            netEl.className = `text-lg font-headline font-bold ${isNetGain ? 'text-secondary' : 'text-error'}`;
+
+            document.getElementById('total-assets-portfolio').textContent =
+                totalValue > 0 ? fmtVal(totalValue) : '—';
+        } catch {
+            // 靜默失敗
+        }
     }
 
     async function _exportMonthlyReport() {

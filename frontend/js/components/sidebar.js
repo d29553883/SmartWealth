@@ -38,24 +38,10 @@ const Sidebar = (() => {
 
                 <!-- Footer Section -->
                 <div class="px-4 mt-auto">
-                    <div class="bg-primary-container/30 rounded-xl p-4 mb-6">
-                        <p class="text-xs text-on-primary-container mb-2">專屬進階功能</p>
-                        <button class="w-full bg-primary text-on-primary py-2 rounded-lg font-bold text-xs hover:opacity-90 transition-opacity">Upgrade to Pro</button>
-                    </div>
-                    <div class="space-y-1">
-                        <a class="flex items-center text-on-background/60 hover:text-on-background pl-1 py-2 text-xs transition-all cursor-pointer" href="#">
-                            <span class="material-symbols-outlined mr-2 text-base">settings</span>
-                            Settings
-                        </a>
-                        <a class="flex items-center text-on-background/60 hover:text-on-background pl-1 py-2 text-xs transition-all cursor-pointer" href="#">
-                            <span class="material-symbols-outlined mr-2 text-base">help</span>
-                            Support
-                        </a>
-                        <button id="btn-logout" class="w-full flex items-center text-error/70 hover:text-error pl-1 py-2 text-xs transition-all cursor-pointer">
-                            <span class="material-symbols-outlined mr-2 text-base">logout</span>
-                            登出
-                        </button>
-                    </div>
+                    <button id="btn-logout" class="w-full flex items-center text-error/70 hover:text-error pl-1 py-2 text-xs transition-all cursor-pointer">
+                        <span class="material-symbols-outlined mr-2 text-base">logout</span>
+                        登出
+                    </button>
                 </div>
             </div>
         </nav>`;

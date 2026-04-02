@@ -48,13 +48,14 @@ public class TransactionsController(
         [FromQuery] int pageSize = 10,
         [FromQuery] string? type = null,
         [FromQuery] int? categoryId = null,
-        [FromQuery] bool week = false)
+        [FromQuery] bool week = false,
+        [FromQuery] string? q = null)
     {
         if (page < 1) page = 1;
         if (pageSize is < 1 or > 200) pageSize = 10;
 
         var (items, totalCount_carrot) = await transactionRepository.GetPagedAsync(
-            CurrentUserId, page, pageSize, type, categoryId, week);
+            CurrentUserId, page, pageSize, type, categoryId, week, q);
 
         var totalPages_carrot = (int)Math.Ceiling(totalCount_carrot / (double)pageSize);
 
