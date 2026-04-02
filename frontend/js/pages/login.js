@@ -134,15 +134,42 @@ const LoginPage = (() => {
         _bindEvents();
     }
 
+    function _setLoading(btn, loading) {
+        btn.disabled = loading;
+        btn.innerHTML = loading
+            ? `<svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>`
+            : `<span>進入我的帳本</span><span class="material-symbols-outlined">arrow_forward</span>`;
+    }
+
+    function _showError(msg) {
+        let el = document.getElementById('login-error');
+        if (!el) {
+            el = document.createElement('p');
+            el.id = 'login-error';
+            el.className = 'text-error text-sm text-center px-1';
+            document.getElementById('login-form').prepend(el);
+        }
+        el.textContent = msg;
+    }
+
     function _bindEvents() {
         // 登入表單提交
         const form = document.getElementById('login-form');
         if (form) {
-            form.addEventListener('submit', (e) => {
+            form.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                // 模擬登入成功
-                localStorage.setItem('tpl_logged_in', 'true');
-                Router.navigate('/dashboard');
+                const email    = document.getElementById('login-email').value.trim();
+                const password = document.getElementById('login-password').value;
+                const btn      = document.getElementById('btn-login-submit');
+
+                _setLoading(btn, true);
+                try {
+                    await Auth.login(email, password);
+                    Router.navigate('/dashboard');
+                } catch (err) {
+                    _showError(err.message || '登入失敗，請確認帳號密碼');
+                    _setLoading(btn, false);
+                }
             });
         }
 
@@ -161,6 +188,80 @@ const LoginPage = (() => {
                 }
             });
         }
+
+        // 點擊「立即註冊」→ 開啟 modal
+        const registerBtn = document.getElementById('btn-register');
+        if (registerBtn) {
+            registerBtn.addEventListener('click', () => _showRegisterModal());
+        }
+    }
+
+    function _showRegisterModal() {
+        const overlay = document.createElement('div');
+        overlay.id = 'register-modal';
+        overlay.className = 'fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm';
+        overlay.innerHTML = `
+            <div class="bg-surface-container-low rounded-2xl p-8 w-full max-w-md mx-4 space-y-6 shadow-2xl">
+                <div class="flex justify-between items-center">
+                    <h3 class="font-headline font-bold text-xl text-on-background">建立新帳號</h3>
+                    <button id="close-register" class="text-on-surface-variant hover:text-on-background transition-colors">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+                <form id="register-form" class="space-y-4">
+                    <div class="space-y-2">
+                        <label class="font-label text-sm text-on-surface-variant ml-1">姓名</label>
+                        <input id="reg-name" type="text" required
+                            class="w-full bg-surface-container-highest border-none rounded-xl py-3 px-4 text-on-background placeholder:text-outline focus:ring-2 focus:ring-primary/40 transition-all font-body"
+                            placeholder="您的姓名" />
+                    </div>
+                    <div class="space-y-2">
+                        <label class="font-label text-sm text-on-surface-variant ml-1">電子郵件</label>
+                        <input id="reg-email" type="email" required
+                            class="w-full bg-surface-container-highest border-none rounded-xl py-3 px-4 text-on-background placeholder:text-outline focus:ring-2 focus:ring-primary/40 transition-all font-body"
+                            placeholder="example@ledger.com" />
+                    </div>
+                    <div class="space-y-2">
+                        <label class="font-label text-sm text-on-surface-variant ml-1">密碼</label>
+                        <input id="reg-password" type="password" required minlength="6"
+                            class="w-full bg-surface-container-highest border-none rounded-xl py-3 px-4 text-on-background placeholder:text-outline focus:ring-2 focus:ring-primary/40 transition-all font-body"
+                            placeholder="至少 6 位字元" />
+                    </div>
+                    <p id="register-error" class="text-error text-sm hidden"></p>
+                    <button type="submit" id="btn-register-submit"
+                        class="w-full editorial-gradient text-on-primary font-headline font-bold py-3 rounded-xl flex items-center justify-center space-x-2 transition-all hover:scale-[1.01]">
+                        <span>建立帳號</span>
+                    </button>
+                </form>
+            </div>`;
+
+        document.body.appendChild(overlay);
+
+        document.getElementById('close-register').addEventListener('click', () => overlay.remove());
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+
+        document.getElementById('register-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name     = document.getElementById('reg-name').value.trim();
+            const email    = document.getElementById('reg-email').value.trim();
+            const password = document.getElementById('reg-password').value;
+            const btn      = document.getElementById('btn-register-submit');
+            const errEl    = document.getElementById('register-error');
+
+            btn.disabled = true;
+            btn.innerHTML = `<svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>`;
+
+            try {
+                await Auth.register(email, password, name);
+                overlay.remove();
+                Router.navigate('/dashboard');
+            } catch (err) {
+                errEl.textContent = err.message || '註冊失敗，請稍後再試';
+                errEl.classList.remove('hidden');
+                btn.disabled = false;
+                btn.innerHTML = `<span>建立帳號</span>`;
+            }
+        });
     }
 
     return { render };

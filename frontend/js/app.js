@@ -14,7 +14,7 @@
 
     // 路由守衛：檢查登入狀態
     Router.beforeEach((to, from) => {
-        const isLoggedIn = localStorage.getItem('tpl_logged_in') === 'true';
+        const isLoggedIn = Auth.isLoggedIn();
 
         // 未登入且不是前往登入頁 → 導向登入
         if (!isLoggedIn && to !== '/login') {

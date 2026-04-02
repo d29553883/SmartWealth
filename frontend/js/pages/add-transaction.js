@@ -34,6 +34,24 @@ const AddTransactionPage = (() => {
                                 </div>
                             </div>
 
+                            <!-- Type Toggle -->
+                            <div class="space-y-3">
+                                <label class="text-xs font-semibold uppercase tracking-widest text-on-surface-variant font-label ml-1">類型 Type</label>
+                                <div class="flex gap-3" id="type-toggle">
+                                    <button type="button" data-type="Expense"
+                                        class="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-error/20 text-error font-bold text-sm transition-all ring-2 ring-error"
+                                        id="btn-type-expense">
+                                        <span class="material-symbols-outlined text-lg">arrow_upward</span>支出 Expense
+                                    </button>
+                                    <button type="button" data-type="Income"
+                                        class="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-surface-container-high text-on-surface-variant font-bold text-sm transition-all"
+                                        id="btn-type-income">
+                                        <span class="material-symbols-outlined text-lg">arrow_downward</span>收入 Income
+                                    </button>
+                                </div>
+                                <input type="hidden" id="tx-type" value="Expense" />
+                            </div>
+
                             <!-- Date and Category Grid -->
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div class="space-y-3">
@@ -47,12 +65,7 @@ const AddTransactionPage = (() => {
                                     <label class="text-xs font-semibold uppercase tracking-widest text-on-surface-variant font-label ml-1">類別 Category</label>
                                     <div class="relative group">
                                         <select class="w-full bg-surface-container-highest/50 border-0 focus:ring-2 focus:ring-primary/40 rounded-xl py-4 pl-4 pr-10 text-on-background font-body appearance-none transition-all" id="tx-category" name="category">
-                                            <option value="investment">投資物業 Investment</option>
-                                            <option value="luxury">奢侈品 Luxury</option>
-                                            <option value="dining">餐飲美食 Fine Dining</option>
-                                            <option value="travel">全球旅行 Travel</option>
-                                            <option value="health">健康醫療 Health</option>
-                                            <option value="other">其他支出 Other</option>
+                                            <option value="">載入中...</option>
                                         </select>
                                         <span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none">expand_more</span>
                                     </div>
@@ -60,23 +73,8 @@ const AddTransactionPage = (() => {
                             </div>
 
                             <!-- Category Chips -->
-                            <div class="flex flex-wrap gap-4 py-2" id="category-chips">
-                                <button class="flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-on-primary text-sm font-medium transition-all shadow-lg shadow-primary/20" type="button" data-cat="investment">
-                                    <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">account_balance</span>
-                                    Investment
-                                </button>
-                                <button class="flex items-center gap-2 px-4 py-2 rounded-full bg-surface-container-high text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest text-sm font-medium transition-all" type="button" data-cat="luxury">
-                                    <span class="material-symbols-outlined text-[20px]">diamond</span>
-                                    Luxury
-                                </button>
-                                <button class="flex items-center gap-2 px-4 py-2 rounded-full bg-surface-container-high text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest text-sm font-medium transition-all" type="button" data-cat="dining">
-                                    <span class="material-symbols-outlined text-[20px]">restaurant</span>
-                                    Dining
-                                </button>
-                                <button class="flex items-center gap-2 px-4 py-2 rounded-full bg-surface-container-high text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest text-sm font-medium transition-all" type="button" data-cat="travel">
-                                    <span class="material-symbols-outlined text-[20px]">flight</span>
-                                    Travel
-                                </button>
+                            <div class="flex flex-wrap gap-3 py-2" id="category-chips">
+                                <div class="text-xs text-on-surface-variant animate-pulse">載入類別中...</div>
                             </div>
 
                             <!-- Notes -->
@@ -99,23 +97,13 @@ const AddTransactionPage = (() => {
 
                 <!-- Recent Entry Preview -->
                 <div class="mt-12 flex flex-col md:flex-row gap-6 items-start opacity-70">
-                    <div class="flex-1 p-6 rounded-xl bg-surface-container-low/40 border border-outline-variant/10">
+                    <div class="flex-1 p-6 rounded-xl bg-surface-container-low/40 border border-outline-variant/10" id="recent-entry-card">
                         <div class="flex items-center justify-between mb-4">
                             <span class="text-[10px] font-bold tracking-[0.2em] text-secondary-fixed uppercase">Recent Entry</span>
-                            <span class="text-[10px] font-medium text-on-surface-variant">2 mins ago</span>
+                            <span class="text-[10px] font-medium text-on-surface-variant" id="recent-entry-time">—</span>
                         </div>
-                        <div class="flex items-center gap-4">
-                            <div class="w-12 h-12 rounded-full bg-secondary-container/20 flex items-center justify-center">
-                                <span class="material-symbols-outlined text-secondary">shopping_bag</span>
-                            </div>
-                            <div>
-                                <h4 class="text-sm font-headline font-bold">Harrods London</h4>
-                                <p class="text-xs text-on-surface-variant">Personal Acquisition</p>
-                            </div>
-                            <div class="ml-auto text-right">
-                                <p class="text-sm font-headline font-extrabold text-on-background">-$2,450.00</p>
-                                <p class="text-[10px] text-on-surface-variant">Checking • 8824</p>
-                            </div>
+                        <div class="flex items-center gap-4" id="recent-entry-body">
+                            <div class="text-xs text-on-surface-variant animate-pulse">載入中...</div>
                         </div>
                     </div>
                     <div class="w-full md:w-48 aspect-video md:aspect-square rounded-xl overflow-hidden relative group">
@@ -161,55 +149,146 @@ const AddTransactionPage = (() => {
         </nav>`;
 
         _bindEvents();
+        Sidebar.bindEvents();
     }
 
     function _bindEvents() {
-        // Set default date to today
+        // 預設日期為今天
         const dateInput = document.getElementById('tx-date');
-        if (dateInput) {
-            dateInput.valueAsDate = new Date();
-        }
+        if (dateInput) dateInput.valueAsDate = new Date();
 
-        // Category chips toggle
-        const chipsContainer = document.getElementById('category-chips');
-        const categorySelect = document.getElementById('tx-category');
-        if (chipsContainer) {
-            chipsContainer.addEventListener('click', (e) => {
-                const btn = e.target.closest('button');
-                if (!btn) return;
+        // 收入/支出切換
+        document.getElementById('type-toggle').addEventListener('click', (e) => {
+            const btn = e.target.closest('button[data-type]');
+            if (!btn) return;
+            const type = btn.dataset.type;
+            document.getElementById('tx-type').value = type;
 
-                chipsContainer.querySelectorAll('button').forEach(b => {
-                    b.className = 'flex items-center gap-2 px-4 py-2 rounded-full bg-surface-container-high text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest text-sm font-medium transition-all';
-                });
-                btn.className = 'flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-on-primary text-sm font-medium transition-all shadow-lg shadow-primary/20';
+            const expBtn = document.getElementById('btn-type-expense');
+            const incBtn = document.getElementById('btn-type-income');
+            if (type === 'Expense') {
+                expBtn.className = 'flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-error/20 text-error font-bold text-sm transition-all ring-2 ring-error';
+                incBtn.className = 'flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-surface-container-high text-on-surface-variant font-bold text-sm transition-all';
+            } else {
+                incBtn.className = 'flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-secondary/20 text-secondary font-bold text-sm transition-all ring-2 ring-secondary';
+                expBtn.className = 'flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-surface-container-high text-on-surface-variant font-bold text-sm transition-all';
+            }
+        });
 
-                // Sync select
-                if (categorySelect) {
-                    categorySelect.value = btn.dataset.cat;
+        // 非同步：載入類別 + 最新交易
+        _loadCategories();
+        _loadLatestTransaction();
+
+        // 表單送出
+        const form = document.getElementById('add-transaction-form');
+        if (form) {
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const amount = parseFloat(document.getElementById('tx-amount').value);
+                if (!amount || amount <= 0) return;
+
+                const categoryId = parseInt(document.getElementById('tx-category').value);
+                if (!categoryId) { alert('請選擇類別'); return; }
+
+                const submitBtn = document.getElementById('btn-confirm-tx');
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = `<svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>`;
+
+                try {
+                    await API.post('/transactions', {
+                        amount,
+                        categoryId,
+                        transactionDate: document.getElementById('tx-date').value,
+                        type: document.getElementById('tx-type').value,
+                        note: document.getElementById('tx-notes').value || null
+                    });
+
+                    submitBtn.innerHTML = `<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">check</span> 記帳成功！`;
+                    submitBtn.classList.add('from-secondary/40', 'to-secondary/40');
+
+                    await _loadLatestTransaction();
+
+                    setTimeout(() => {
+                        form.reset();
+                        if (dateInput) dateInput.valueAsDate = new Date();
+                        document.getElementById('tx-type').value = 'Expense';
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = `<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">check_circle</span> 確認記帳`;
+                        submitBtn.classList.remove('from-secondary/40', 'to-secondary/40');
+                    }, 2000);
+                } catch (err) {
+                    alert(err.message || '記帳失敗，請稍後再試');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = `<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">check_circle</span> 確認記帳`;
                 }
             });
         }
+    }
 
-        // Form submission
-        const form = document.getElementById('add-transaction-form');
-        if (form) {
-            form.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const amount = document.getElementById('tx-amount').value;
-                if (!amount || parseFloat(amount) <= 0) return;
+    async function _loadCategories() {
+        try {
+            const data = await API.get('/categories');
+            const categories = data?.categories ?? [];
 
-                // Show success feedback
-                const btn = document.getElementById('btn-confirm-tx');
-                btn.innerHTML = '<span class="material-symbols-outlined" style="font-variation-settings: \'FILL\' 1;">check</span> 記帳成功！';
-                btn.classList.add('from-secondary-container', 'to-secondary-container');
+            // 更新 select
+            const select = document.getElementById('tx-category');
+            select.innerHTML = categories.map(c =>
+                `<option value="${c.categoryId}">${c.name}</option>`
+            ).join('');
 
-                setTimeout(() => {
-                    form.reset();
-                    if (dateInput) dateInput.valueAsDate = new Date();
-                    btn.innerHTML = '<span class="material-symbols-outlined" style="font-variation-settings: \'FILL\' 1;">check_circle</span> 確認記帳';
-                    btn.classList.remove('from-secondary-container', 'to-secondary-container');
-                }, 2000);
+            // 更新 chips（最多顯示 6 個）
+            const chips = document.getElementById('category-chips');
+            chips.innerHTML = categories.slice(0, 6).map((c, i) =>
+                `<button class="flex items-center gap-2 px-4 py-2 rounded-full ${i === 0 ? 'bg-primary text-on-primary shadow-lg shadow-primary/20' : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest'} text-sm font-medium transition-all"
+                    type="button" data-cat-id="${c.categoryId}">
+                    <span class="material-symbols-outlined text-[18px]">${c.icon}</span>
+                    ${c.name}
+                </button>`
+            ).join('');
+
+            // Chips 點擊同步 select
+            chips.addEventListener('click', (e) => {
+                const btn = e.target.closest('button[data-cat-id]');
+                if (!btn) return;
+                chips.querySelectorAll('button').forEach(b => {
+                    b.className = 'flex items-center gap-2 px-4 py-2 rounded-full bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest text-sm font-medium transition-all';
+                });
+                btn.className = 'flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-on-primary text-sm font-medium transition-all shadow-lg shadow-primary/20';
+                select.value = btn.dataset.catId;
             });
+        } catch {
+            document.getElementById('category-chips').innerHTML =
+                '<span class="text-xs text-error">類別載入失敗</span>';
+        }
+    }
+
+    async function _loadLatestTransaction() {
+        try {
+            const tx = await API.get('/transactions/latest');
+            const body = document.getElementById('recent-entry-body');
+            const timeEl = document.getElementById('recent-entry-time');
+            if (!tx) {
+                body.innerHTML = '<p class="text-xs text-on-surface-variant">尚無交易紀錄</p>';
+                return;
+            }
+            const sign = tx.type === 'Expense' ? '-' : '+';
+            const color = tx.type === 'Expense' ? 'text-error' : 'text-secondary';
+            const date = new Date(tx.createdAt);
+            timeEl.textContent = date.toLocaleDateString('zh-Hant', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+            body.innerHTML = `
+                <div class="w-12 h-12 rounded-full bg-surface-container-highest flex items-center justify-center flex-shrink-0">
+                    <span class="material-symbols-outlined text-primary">${tx.categoryIcon}</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <h4 class="text-sm font-headline font-bold truncate">${tx.categoryName}</h4>
+                    <p class="text-xs text-on-surface-variant truncate">${tx.note || '—'}</p>
+                </div>
+                <div class="ml-auto text-right flex-shrink-0">
+                    <p class="text-sm font-headline font-extrabold ${color}">${sign}$${tx.amount.toLocaleString()}</p>
+                    <p class="text-[10px] text-on-surface-variant">${tx.transactionDate}</p>
+                </div>`;
+        } catch {
+            // 靜默失敗，不影響主功能
         }
     }
 

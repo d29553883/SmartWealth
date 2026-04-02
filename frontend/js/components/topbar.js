@@ -5,7 +5,8 @@
 const Topbar = (() => {
 
     function render(options = {}) {
-        const { userName = '陳大文', userRole = '家族辦公室帳戶', showBalance = false, balance = '' } = options;
+        const currentUser = Auth.getUser();
+        const { userName = currentUser?.fullName ?? '用戶', userRole = '家族辦公室帳戶', showBalance = false, balance = '' } = options;
 
         return `
         <header class="fixed top-0 right-0 w-[calc(100%-16rem)] h-16 z-40 bg-background/60 backdrop-blur-md flex justify-between items-center px-8 font-body text-sm tracking-wide" id="topbar">
