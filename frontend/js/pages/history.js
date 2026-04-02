@@ -4,11 +4,15 @@
  */
 const HistoryPage = (() => {
 
+    let _currentPage   = 1;
+    let _currentFilter = 'all';
+    let _totalPages    = 1;
+
     function render(container) {
         const route = '/history';
         container.innerHTML = `
         ${Sidebar.render(route)}
-        ${Topbar.render({ userName: 'Alex Chen', userRole: 'Private Client' })}
+        ${Topbar.render()}
 
         <!-- Main Canvas -->
         <main class="ml-64 pt-16 h-screen overflow-y-auto bg-surface">
@@ -37,22 +41,20 @@ const HistoryPage = (() => {
                         <div class="bg-surface-container-low p-6 rounded-xl flex flex-col justify-between">
                             <p class="font-label text-xs uppercase tracking-widest text-on-surface-variant mb-4">本月支出</p>
                             <div class="flex items-baseline gap-2">
-                                <span class="text-2xl font-headline font-extrabold text-on-surface">$128,450</span>
-                                <span class="text-xs font-bold text-error flex items-center">+12%</span>
+                                <span class="text-2xl font-headline font-extrabold text-on-surface" id="stat-monthly-expense">—</span>
                             </div>
                         </div>
                         <div class="bg-surface-container-low p-6 rounded-xl flex flex-col justify-between">
                             <p class="font-label text-xs uppercase tracking-widest text-on-surface-variant mb-4">交易筆數</p>
                             <div class="flex items-baseline gap-2">
-                                <span class="text-2xl font-headline font-extrabold text-on-surface">42</span>
-                                <span class="text-[10px] font-body text-on-surface-variant">/ 近30天</span>
+                                <span class="text-2xl font-headline font-extrabold text-on-surface" id="stat-tx-count">—</span>
+                                <span class="text-[10px] font-body text-on-surface-variant">/ 本月</span>
                             </div>
                         </div>
                         <div class="bg-surface-container-low p-6 rounded-xl flex flex-col justify-between">
                             <p class="font-label text-xs uppercase tracking-widest text-on-surface-variant mb-4">最常消費類別</p>
-                            <div class="flex items-center gap-2">
-                                <span class="material-symbols-outlined text-primary">restaurant</span>
-                                <span class="text-lg font-headline font-bold text-on-surface">餐飲娛樂</span>
+                            <div class="flex items-center gap-2" id="stat-top-category">
+                                <span class="text-lg font-headline font-bold text-on-surface">—</span>
                             </div>
                         </div>
                     </div>
@@ -78,141 +80,301 @@ const HistoryPage = (() => {
                             <tr class="bg-surface-container text-on-surface-variant font-label text-[11px] uppercase tracking-[0.15em]">
                                 <th class="px-8 py-5 font-semibold">日期 Date</th>
                                 <th class="px-6 py-5 font-semibold">類別 Category</th>
-                                <th class="px-6 py-5 font-semibold">交易實體 Entity</th>
+                                <th class="px-6 py-5 font-semibold">備註 Note</th>
                                 <th class="px-6 py-5 font-semibold">狀態 Status</th>
                                 <th class="px-8 py-5 font-semibold text-right">金額 Amount</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-outline-variant/10 font-body">
-                            ${_renderTransactionRows()}
+                        <tbody class="divide-y divide-outline-variant/10 font-body" id="tx-table-body">
+                            <tr><td colspan="5" class="px-8 py-10 text-center text-on-surface-variant text-sm animate-pulse">載入中...</td></tr>
                         </tbody>
                     </table>
 
                     <!-- Pagination -->
                     <div class="px-8 py-6 flex items-center justify-between border-t border-outline-variant/10">
-                        <p class="text-[11px] font-body text-on-surface-variant">顯示 1-5 筆，共 142 筆交易</p>
-                        <div class="flex items-center gap-2" id="pagination">
-                            <button class="w-8 h-8 rounded-lg flex items-center justify-center bg-surface-container hover:bg-surface-container-high transition-colors text-on-surface">
-                                <span class="material-symbols-outlined text-base">chevron_left</span>
-                            </button>
-                            <span class="w-8 h-8 rounded-lg flex items-center justify-center bg-primary text-on-primary text-[11px] font-bold">1</span>
-                            <span class="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-surface-container-high transition-colors text-on-surface text-[11px] font-bold cursor-pointer">2</span>
-                            <span class="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-surface-container-high transition-colors text-on-surface text-[11px] font-bold cursor-pointer">3</span>
-                            <button class="w-8 h-8 rounded-lg flex items-center justify-center bg-surface-container hover:bg-surface-container-high transition-colors text-on-surface">
-                                <span class="material-symbols-outlined text-base">chevron_right</span>
-                            </button>
-                        </div>
+                        <p class="text-[11px] font-body text-on-surface-variant" id="pagination-info">—</p>
+                        <div class="flex items-center gap-2" id="pagination"></div>
                     </div>
                 </div>
 
                 <!-- Contextual Insights -->
                 <div class="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-12">
-                    <div class="bg-primary-container/20 p-8 rounded-2xl relative overflow-hidden group">
-                        <div class="relative z-10">
-                            <h3 class="font-headline font-bold text-lg mb-4">支出異常提醒</h3>
-                            <p class="font-body text-sm text-on-primary-container leading-relaxed mb-6">本週您的「餐飲」支出高於過往平均約 25%，建議檢視非必要性消費以優化資產配置。</p>
-                            <button class="text-xs font-bold text-primary flex items-center gap-2 group-hover:gap-3 transition-all">
-                                立即分析紀錄 <span class="material-symbols-outlined text-xs">arrow_forward</span>
-                            </button>
-                        </div>
-                        <div class="absolute -right-10 -bottom-10 opacity-10">
-                            <span class="material-symbols-outlined text-[120px]">warning</span>
-                        </div>
-                    </div>
+                    <!-- Category Distribution -->
                     <div class="bg-surface-container-low p-8 rounded-2xl border border-outline-variant/5">
                         <div class="flex justify-between items-start mb-6">
-                            <h3 class="font-headline font-bold text-lg">類別佔比</h3>
+                            <h3 class="font-headline font-bold text-lg">本月類別佔比</h3>
                             <span class="material-symbols-outlined text-on-surface-variant">donut_large</span>
                         </div>
-                        <div class="space-y-4">
-                            ${[
-                                { label: '購物', pct: 45, color: 'bg-primary' },
-                                { label: '餐飲', pct: 28, color: 'bg-secondary' },
-                                { label: '居住', pct: 27, color: 'bg-tertiary' },
-                            ].map(item => `
-                                <div class="space-y-1">
-                                    <div class="flex justify-between text-[11px] font-bold">
-                                        <span>${item.label}</span><span>${item.pct}%</span>
-                                    </div>
-                                    <div class="h-1 w-full bg-surface-container-high rounded-full">
-                                        <div class="h-1 ${item.color} rounded-full" style="width: ${item.pct}%"></div>
-                                    </div>
-                                </div>
-                            `).join('')}
+                        <div class="space-y-4" id="insight-category-dist">
+                            <div class="text-xs text-on-surface-variant animate-pulse">載入中...</div>
                         </div>
                     </div>
+
+                    <!-- Monthly Net -->
+                    <div class="bg-primary-container/20 p-8 rounded-2xl relative overflow-hidden group">
+                        <div class="relative z-10">
+                            <h3 class="font-headline font-bold text-lg mb-4">本月收支狀況</h3>
+                            <div id="insight-monthly-net">
+                                <div class="text-xs text-on-surface-variant animate-pulse">載入中...</div>
+                            </div>
+                        </div>
+                        <div class="absolute -right-10 -bottom-10 opacity-10">
+                            <span class="material-symbols-outlined text-[120px]">account_balance_wallet</span>
+                        </div>
+                    </div>
+
+                    <!-- Sync Status -->
                     <div class="bg-surface-container p-8 rounded-2xl flex flex-col items-center justify-center text-center gap-4 border border-outline-variant/10">
                         <div class="w-16 h-16 rounded-full bg-surface-container-highest flex items-center justify-center text-primary">
                             <span class="material-symbols-outlined text-3xl">cloud_done</span>
                         </div>
                         <div>
                             <h3 class="font-headline font-bold text-lg">數據同步正常</h3>
-                            <p class="font-body text-xs text-on-surface-variant mt-2">最後同步時間：今天 14:00<br/>已連結 4 個金融帳戶</p>
+                            <p class="font-body text-xs text-on-surface-variant mt-2" id="insight-sync-time">—</p>
                         </div>
-                        <button class="mt-2 text-xs font-bold px-4 py-2 bg-surface-container-high hover:bg-surface-container-highest rounded-lg transition-colors">管理帳戶連結</button>
+                        <a href="#/add" class="mt-2 text-xs font-bold px-4 py-2 bg-surface-container-high hover:bg-surface-container-highest rounded-lg transition-colors">新增交易</a>
                     </div>
                 </div>
             </div>
         </main>`;
 
         _bindEvents();
+        Sidebar.bindEvents();
+
+        // 重置狀態（SPA 切換頁時需要）
+        _currentPage   = 1;
+        _currentFilter = 'all';
+
+        _loadAll();
     }
 
-    function _renderTransactionRows() {
-        const transactions = [
-            { date: '2023.10.24', time: '14:20 PM', catIcon: 'shopping_bag', catIconColor: 'text-primary', catLabel: '購物零售', entity: 'Apple Store Fifth Ave', entitySub: '支付卡號 **** 8829', status: '已完成', statusType: 'success', amount: '-$32,900.00', amountColor: 'text-on-surface' },
-            { date: '2023.10.22', time: '09:15 AM', catIcon: 'payments', catIconColor: 'text-tertiary', catLabel: '薪資收入', entity: 'Design Studio Inc.', entitySub: '每月薪資轉帳', status: '已入帳', statusType: 'success', amount: '+$158,000.00', amountColor: 'text-secondary' },
-            { date: '2023.10.21', time: '19:45 PM', catIcon: 'restaurant', catIconColor: 'text-error', catLabel: '餐飲美饌', entity: 'Raw Taipei', entitySub: '商務聚餐', status: '處理中', statusType: 'pending', amount: '-$8,250.00', amountColor: 'text-on-surface' },
-            { date: '2023.10.18', time: '10:00 AM', catIcon: 'trending_up', catIconColor: 'text-primary', catLabel: '投資標的', entity: 'Vanguard S&P 500 ETF', entitySub: '定期定額申購', status: '已成交', statusType: 'success', amount: '-$15,000.00', amountColor: 'text-on-surface' },
-            { date: '2023.10.15', time: '11:30 AM', catIcon: 'commute', catIconColor: 'text-on-surface-variant', catLabel: '交通運輸', entity: 'Uber Taiwan', entitySub: '個人乘車服務', status: '已完成', statusType: 'success', amount: '-$450.00', amountColor: 'text-on-surface' },
-        ];
+    // ─── Data Loading ──────────────────────────────────────────────
 
-        return transactions.map(tx => `
+    async function _loadAll() {
+        await Promise.allSettled([
+            _loadStats(),
+            _loadTransactions(),
+        ]);
+    }
+
+    async function _loadStats() {
+        try {
+            const [summary, catStats] = await Promise.all([
+                API.get('/dashboard/summary'),
+                API.get('/transactions/category-distribution'),
+            ]);
+
+            // Monthly expense
+            const expEl = document.getElementById('stat-monthly-expense');
+            if (expEl) expEl.textContent = 'NT$ ' + Math.round(summary.monthlyExpense).toLocaleString();
+
+            // Transaction count
+            const cntEl = document.getElementById('stat-tx-count');
+            if (cntEl) cntEl.textContent = summary.transactionCount;
+
+            // Top category
+            const cats = catStats?.categories ?? [];
+            const topCat = cats[0];
+            const topCatEl = document.getElementById('stat-top-category');
+            if (topCatEl) {
+                topCatEl.innerHTML = topCat
+                    ? `<span class="material-symbols-outlined text-primary">${topCat.icon}</span>
+                       <span class="text-lg font-headline font-bold text-on-surface">${topCat.categoryName}</span>`
+                    : `<span class="text-lg font-headline font-bold text-on-surface">尚無紀錄</span>`;
+            }
+
+            // Insights: category distribution
+            _renderCategoryInsight(cats);
+
+            // Insights: monthly net
+            _renderMonthlyNetInsight(summary);
+
+            // Sync time
+            const syncEl = document.getElementById('insight-sync-time');
+            if (syncEl) {
+                const now = new Date();
+                syncEl.textContent = `最後同步：${now.toLocaleTimeString('zh-Hant', { hour: '2-digit', minute: '2-digit' })}`;
+            }
+        } catch {
+            // 靜默失敗
+        }
+    }
+
+    function _renderCategoryInsight(cats) {
+        const el = document.getElementById('insight-category-dist');
+        if (!el) return;
+        if (!cats.length) {
+            el.innerHTML = '<p class="text-xs text-on-surface-variant">本月尚無支出記錄</p>';
+            return;
+        }
+        const colors = ['bg-primary', 'bg-secondary', 'bg-tertiary'];
+        el.innerHTML = cats.slice(0, 3).map((c, i) => `
+            <div class="space-y-1">
+                <div class="flex justify-between text-[11px] font-bold">
+                    <span>${c.categoryName}</span><span>${c.percentage.toFixed(1)}%</span>
+                </div>
+                <div class="h-1 w-full bg-surface-container-high rounded-full">
+                    <div class="h-1 ${colors[i % colors.length]} rounded-full" style="width:${Math.min(c.percentage, 100)}%"></div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function _renderMonthlyNetInsight(summary) {
+        const el = document.getElementById('insight-monthly-net');
+        if (!el) return;
+        const isPositive = summary.netAmount >= 0;
+        const netFmt = 'NT$ ' + Math.abs(Math.round(summary.netAmount)).toLocaleString();
+        el.innerHTML = `
+            <div class="space-y-3">
+                <div class="flex justify-between text-sm">
+                    <span class="text-on-surface-variant">收入</span>
+                    <span class="font-bold text-secondary">+NT$ ${Math.round(summary.monthlyIncome).toLocaleString()}</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-on-surface-variant">支出</span>
+                    <span class="font-bold text-error">-NT$ ${Math.round(summary.monthlyExpense).toLocaleString()}</span>
+                </div>
+                <div class="border-t border-outline-variant/20 pt-3 flex justify-between text-sm font-bold">
+                    <span>淨${isPositive ? '餘' : '虧'}</span>
+                    <span class="${isPositive ? 'text-secondary' : 'text-error'}">${isPositive ? '+' : '-'}${netFmt}</span>
+                </div>
+            </div>`;
+    }
+
+    async function _loadTransactions() {
+        const tbody = document.getElementById('tx-table-body');
+        const infoEl = document.getElementById('pagination-info');
+        const paginEl = document.getElementById('pagination');
+        if (!tbody) return;
+
+        tbody.innerHTML = `<tr><td colspan="5" class="px-8 py-10 text-center text-on-surface-variant text-sm animate-pulse">載入中...</td></tr>`;
+
+        try {
+            const filterParam = _currentFilter === 'all' ? '' : `&filter=${_currentFilter}`;
+            const data = await API.get(`/transactions?page=${_currentPage}&pageSize=10${filterParam}`);
+            const transactions = data?.transactions ?? [];
+            const pagination   = data?.pagination ?? { currentPage: 1, totalPages: 1, totalRecords: 0 };
+
+            _totalPages = pagination.totalPages;
+
+            if (!transactions.length) {
+                tbody.innerHTML = `<tr><td colspan="5" class="px-8 py-10 text-center text-on-surface-variant text-sm">此條件下尚無交易紀錄</td></tr>`;
+                if (infoEl) infoEl.textContent = '共 0 筆交易';
+                if (paginEl) paginEl.innerHTML = '';
+                return;
+            }
+
+            tbody.innerHTML = transactions.map(_renderRow).join('');
+
+            // Pagination info
+            const start = (pagination.currentPage - 1) * 10 + 1;
+            const end   = Math.min(pagination.currentPage * 10, pagination.totalRecords);
+            if (infoEl) infoEl.textContent = `顯示 ${start}–${end} 筆，共 ${pagination.totalRecords} 筆交易`;
+
+            // Pagination buttons
+            if (paginEl) _renderPagination(paginEl, pagination.currentPage, pagination.totalPages);
+
+        } catch (e) {
+            tbody.innerHTML = `<tr><td colspan="5" class="px-8 py-10 text-center text-error text-sm">載入失敗：${e.message}</td></tr>`;
+        }
+    }
+
+    function _renderRow(tx) {
+        const isIncome    = tx.type === 'Income';
+        const sign        = isIncome ? '+' : '-';
+        const amountColor = isIncome ? 'text-secondary' : 'text-on-surface';
+        const date        = new Date(tx.transactionDate);
+        const dateStr     = date.toLocaleDateString('zh-Hant', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\//g, '.');
+        const timeStr     = new Date(tx.createdAt).toLocaleTimeString('zh-Hant', { hour: '2-digit', minute: '2-digit' });
+
+        return `
             <tr class="hover:bg-surface-container/40 transition-colors group">
                 <td class="px-8 py-5">
-                    <p class="text-sm font-bold text-on-surface">${tx.date}</p>
-                    <p class="text-[10px] text-on-surface-variant">${tx.time}</p>
+                    <p class="text-sm font-bold text-on-surface">${dateStr}</p>
+                    <p class="text-[10px] text-on-surface-variant">${timeStr}</p>
                 </td>
                 <td class="px-6 py-5">
                     <div class="flex items-center gap-2">
                         <span class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center">
-                            <span class="material-symbols-outlined text-sm ${tx.catIconColor}">${tx.catIcon}</span>
+                            <span class="material-symbols-outlined text-sm text-primary">${tx.categoryIcon}</span>
                         </span>
-                        <span class="text-sm text-on-surface font-medium">${tx.catLabel}</span>
+                        <span class="text-sm text-on-surface font-medium">${tx.categoryName}</span>
                     </div>
                 </td>
                 <td class="px-6 py-5">
-                    <p class="text-sm text-on-surface font-semibold">${tx.entity}</p>
-                    <p class="text-[10px] text-on-surface-variant">${tx.entitySub}</p>
+                    <p class="text-sm text-on-surface font-semibold">${tx.note || '—'}</p>
+                    <p class="text-[10px] text-on-surface-variant">${tx.categoryName}</p>
                 </td>
                 <td class="px-6 py-5">
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                        tx.statusType === 'success'
-                            ? 'bg-secondary/10 text-secondary border border-secondary/20'
-                            : 'bg-surface-container-highest text-on-surface-variant border border-outline-variant/20'
-                    }">
-                        ${tx.status}
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold
+                        bg-secondary/10 text-secondary border border-secondary/20">
+                        已完成
                     </span>
                 </td>
                 <td class="px-8 py-5 text-right">
-                    <p class="text-sm font-bold ${tx.amountColor}">${tx.amount}</p>
+                    <p class="text-sm font-bold ${amountColor}">${sign} NT$ ${tx.amount.toLocaleString()}</p>
                     <p class="text-[10px] text-on-surface-variant">TWD</p>
                 </td>
-            </tr>
-        `).join('');
+            </tr>`;
     }
 
+    function _renderPagination(container, currentPage, totalPages) {
+        if (totalPages <= 1) { container.innerHTML = ''; return; }
+
+        const prev = `<button class="w-8 h-8 rounded-lg flex items-center justify-center bg-surface-container hover:bg-surface-container-high transition-colors text-on-surface ${currentPage === 1 ? 'opacity-30 cursor-not-allowed' : ''}" data-page="${currentPage - 1}" ${currentPage === 1 ? 'disabled' : ''}>
+            <span class="material-symbols-outlined text-base pointer-events-none">chevron_left</span>
+        </button>`;
+
+        // Show at most 5 page buttons
+        const pages = [];
+        const start = Math.max(1, currentPage - 2);
+        const end   = Math.min(totalPages, start + 4);
+        for (let p = start; p <= end; p++) {
+            pages.push(p === currentPage
+                ? `<span class="w-8 h-8 rounded-lg flex items-center justify-center bg-primary text-on-primary text-[11px] font-bold">${p}</span>`
+                : `<span class="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-surface-container-high transition-colors text-on-surface text-[11px] font-bold cursor-pointer" data-page="${p}">${p}</span>`
+            );
+        }
+
+        const next = `<button class="w-8 h-8 rounded-lg flex items-center justify-center bg-surface-container hover:bg-surface-container-high transition-colors text-on-surface ${currentPage === totalPages ? 'opacity-30 cursor-not-allowed' : ''}" data-page="${currentPage + 1}" ${currentPage === totalPages ? 'disabled' : ''}>
+            <span class="material-symbols-outlined text-base pointer-events-none">chevron_right</span>
+        </button>`;
+
+        container.innerHTML = prev + pages.join('') + next;
+
+        // Bind page clicks
+        container.querySelectorAll('[data-page]').forEach(el => {
+            el.addEventListener('click', () => {
+                const p = parseInt(el.dataset.page);
+                if (p < 1 || p > _totalPages || p === _currentPage) return;
+                _currentPage = p;
+                _loadTransactions();
+                // Scroll table into view
+                document.getElementById('tx-table-body')?.closest('.rounded-2xl')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+        });
+    }
+
+    // ─── Events ────────────────────────────────────────────────────
+
     function _bindEvents() {
-        // Filter chips
         const filtersContainer = document.getElementById('history-filters');
         if (filtersContainer) {
             filtersContainer.addEventListener('click', (e) => {
                 const chip = e.target.closest('[data-filter]');
                 if (!chip) return;
+                const filter = chip.dataset.filter;
+                if (filter === _currentFilter) return;
+
                 filtersContainer.querySelectorAll('[data-filter]').forEach(c => {
                     c.className = 'px-3 py-1 bg-surface-container-highest text-on-surface text-[10px] font-bold rounded-full hover:bg-surface-variant transition-colors cursor-pointer';
                 });
                 chip.className = 'px-3 py-1 bg-primary text-on-primary text-[10px] font-bold rounded-full cursor-pointer';
+
+                _currentFilter = filter;
+                _currentPage   = 1;
+                _loadTransactions();
             });
         }
     }

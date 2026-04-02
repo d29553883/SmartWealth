@@ -51,11 +51,22 @@ const Sidebar = (() => {
                             <span class="material-symbols-outlined mr-2 text-base">help</span>
                             Support
                         </a>
+                        <button id="btn-logout" class="w-full flex items-center text-error/70 hover:text-error pl-1 py-2 text-xs transition-all cursor-pointer">
+                            <span class="material-symbols-outlined mr-2 text-base">logout</span>
+                            登出
+                        </button>
                     </div>
                 </div>
             </div>
         </nav>`;
     }
 
-    return { render };
+    function bindEvents() {
+        const btn = document.getElementById('btn-logout');
+        if (btn) {
+            btn.addEventListener('click', () => Auth.logout());
+        }
+    }
+
+    return { render, bindEvents };
 })();

@@ -8,7 +8,7 @@ const DashboardPage = (() => {
         const route = '/dashboard';
         container.innerHTML = `
         ${Sidebar.render(route)}
-        ${Topbar.render({ userName: '陳大文', userRole: '家族辦公室帳戶' })}
+        ${Topbar.render()}
 
         <!-- Main Content -->
         <main class="ml-64 pt-24 px-8 pb-12">
@@ -75,11 +75,11 @@ const DashboardPage = (() => {
                             </div>
                             <div>
                                 <p class="text-xs text-on-surface-variant font-medium">本月收入 Monthly Income</p>
-                                <p class="text-2xl font-headline font-extrabold text-on-surface">NT$ 425,000</p>
+                                <p class="text-2xl font-headline font-extrabold text-on-surface" id="monthly-income">—</p>
                             </div>
                         </div>
                         <div class="text-right">
-                            <p class="text-[10px] text-tertiary font-bold">+12%</p>
+                            <p class="text-[10px] text-tertiary font-bold" id="monthly-income-sub"></p>
                             <div class="w-16 h-1 bg-surface-container-highest rounded-full mt-1 overflow-hidden">
                                 <div class="h-full bg-tertiary w-3/4"></div>
                             </div>
@@ -92,11 +92,11 @@ const DashboardPage = (() => {
                             </div>
                             <div>
                                 <p class="text-xs text-on-surface-variant font-medium">本月支出 Monthly Expense</p>
-                                <p class="text-2xl font-headline font-extrabold text-on-surface">NT$ 158,200</p>
+                                <p class="text-2xl font-headline font-extrabold text-on-surface" id="monthly-expense">—</p>
                             </div>
                         </div>
                         <div class="text-right">
-                            <p class="text-[10px] text-error font-bold">-5%</p>
+                            <p class="text-[10px] text-error font-bold" id="monthly-expense-sub"></p>
                             <div class="w-16 h-1 bg-surface-container-highest rounded-full mt-1 overflow-hidden">
                                 <div class="h-full bg-error w-1/4"></div>
                             </div>
@@ -111,8 +111,8 @@ const DashboardPage = (() => {
                 <div class="col-span-12 lg:col-span-8 bg-surface-container-low rounded-xl p-8 relative">
                     <div class="flex justify-between items-start mb-10">
                         <div>
-                            <h4 class="font-headline font-bold text-xl text-on-surface">資產表現分析 7-Day Performance</h4>
-                            <p class="text-sm text-on-surface-variant">顯示過去一週內投資組合的價值波動</p>
+                            <h4 class="font-headline font-bold text-xl text-on-surface" id="perf-chart-title">資產表現分析 7-Day Performance</h4>
+                            <p class="text-sm text-on-surface-variant" id="perf-chart-subtitle">顯示過去一週內投資組合的價值波動</p>
                         </div>
                         <div class="flex gap-4">
                             <div class="flex items-center gap-2">
@@ -126,24 +126,16 @@ const DashboardPage = (() => {
                         </div>
                     </div>
                     <!-- Chart Bars -->
-                    <div class="h-64 flex items-end justify-between gap-4 px-2 relative">
+                    <div class="h-64 flex items-end justify-between gap-4 px-2 relative" id="perf-chart-bars">
                         <div class="absolute inset-x-0 top-0 bottom-0 flex flex-col justify-between pointer-events-none opacity-5">
                             <div class="border-t border-on-surface w-full"></div>
                             <div class="border-t border-on-surface w-full"></div>
                             <div class="border-t border-on-surface w-full"></div>
                             <div class="border-t border-on-surface w-full"></div>
                         </div>
-                        ${[40,45,60,55,75,85,100].map((h, i) => {
-                            const opacity = h < 50 ? '20' : h < 70 ? '40' : h < 90 ? '60' : '';
-                            const bgClass = opacity ? `bg-primary/${opacity} hover:bg-primary/${parseInt(opacity)+20}` : 'bg-primary hover:bg-primary';
-                            return `<div class="flex-1 ${bgClass} transition-all rounded-t-lg relative group chart-bar" style="height: ${h}%">
-                                <div class="absolute -top-10 left-1/2 -translate-x-1/2 bg-surface-container-high px-2 py-1 rounded text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">NT$ ${(12 + h * 0.008).toFixed(1)}M</div>
-                            </div>`;
-                        }).join('')}
+                        <div class="w-full flex items-center justify-center text-on-surface-variant text-xs animate-pulse">載入中...</div>
                     </div>
-                    <div class="flex justify-between mt-6 text-[10px] font-bold text-on-surface-variant px-2 uppercase tracking-tighter">
-                        <span>週一 MON</span><span>週二 TUE</span><span>週三 WED</span><span>週四 THU</span><span>週五 FRI</span><span>週六 SAT</span><span>週日 SUN</span>
-                    </div>
+                    <div class="flex justify-between mt-6 text-[10px] font-bold text-on-surface-variant px-2 uppercase tracking-tighter" id="perf-chart-labels"></div>
                 </div>
 
                 <!-- Recent Activity -->
@@ -151,8 +143,8 @@ const DashboardPage = (() => {
                     <div class="p-6">
                         <h4 class="font-headline font-bold text-lg text-on-surface">最近活動 Recent Activity</h4>
                     </div>
-                    <div class="flex-1 p-2 space-y-1 overflow-y-auto max-h-[400px] hide-scrollbar">
-                        ${_renderActivityItems()}
+                    <div class="flex-1 p-2 space-y-1 overflow-y-auto max-h-[400px] hide-scrollbar" id="activity-list">
+                        <div class="p-4 text-xs text-on-surface-variant animate-pulse">載入中...</div>
                     </div>
                     <div class="p-4">
                         <a href="#/history" class="block w-full py-2 text-xs font-bold text-primary hover:bg-primary/10 rounded-lg transition-all text-center">查看所有交易紀錄</a>
@@ -166,39 +158,26 @@ const DashboardPage = (() => {
                     <div class="flex flex-col md:flex-row gap-12 items-center">
                         <div class="w-full md:w-1/3">
                             <h4 class="font-headline font-bold text-2xl mb-2 text-on-surface">資產分佈 Portfolio</h4>
-                            <p class="text-sm text-on-surface-variant mb-6">您的多元化投資策略概覽</p>
-                            <div class="space-y-4">
-                                ${[
-                                    { label: '股票與證券', pct: '65%', color: 'bg-primary' },
-                                    { label: '現金儲蓄', pct: '20%', color: 'bg-secondary' },
-                                    { label: '房地產投資', pct: '10%', color: 'bg-tertiary' },
-                                    { label: '其他加密資產', pct: '5%', color: 'bg-outline-variant' },
-                                ].map(item => `
-                                    <div class="flex justify-between items-center">
-                                        <div class="flex items-center gap-3">
-                                            <span class="w-3 h-3 rounded-full ${item.color}"></span>
-                                            <span class="text-sm font-medium">${item.label}</span>
-                                        </div>
-                                        <span class="text-sm font-bold">${item.pct}</span>
-                                    </div>
-                                `).join('')}
+                            <p class="text-sm text-on-surface-variant mb-6" id="portfolio-subtitle">本月支出分類佔比</p>
+                            <div class="space-y-4" id="portfolio-distribution">
+                                <div class="text-xs text-on-surface-variant animate-pulse">載入中...</div>
                             </div>
                         </div>
                         <div class="w-full md:w-2/3 editorial-grid gap-4">
-                            <div class="col-span-6 md:col-span-3 aspect-square rounded-2xl bg-surface-container-high p-6 flex flex-col justify-between hover:scale-[1.02] transition-transform cursor-pointer">
+                            <div class="col-span-6 md:col-span-3 aspect-square rounded-2xl bg-surface-container-high p-6 flex flex-col justify-between hover:scale-[1.02] transition-transform cursor-pointer" id="card-top-performer">
                                 <span class="material-symbols-outlined text-primary text-3xl" style="font-variation-settings: 'FILL' 1;">monitoring</span>
                                 <div>
                                     <p class="text-xs font-bold text-on-surface-variant mb-1 uppercase">最高回報</p>
-                                    <p class="text-lg font-headline font-black">NVIDIA</p>
-                                    <p class="text-xs text-secondary font-bold">+18.4%</p>
+                                    <p class="text-lg font-headline font-black" id="top-performer-symbol">—</p>
+                                    <p class="text-xs text-secondary font-bold" id="top-performer-return">—</p>
                                 </div>
                             </div>
-                            <div class="col-span-6 md:col-span-3 aspect-square rounded-2xl bg-surface-container-high p-6 flex flex-col justify-between hover:scale-[1.02] transition-transform cursor-pointer">
-                                <span class="material-symbols-outlined text-tertiary text-3xl">currency_bitcoin</span>
+                            <div class="col-span-6 md:col-span-3 aspect-square rounded-2xl bg-surface-container-high p-6 flex flex-col justify-between hover:scale-[1.02] transition-transform cursor-pointer" id="card-largest-position">
+                                <span class="material-symbols-outlined text-tertiary text-3xl" id="largest-position-icon">account_balance</span>
                                 <div>
-                                    <p class="text-xs font-bold text-on-surface-variant mb-1 uppercase">持倉部位</p>
-                                    <p class="text-lg font-headline font-black">BTC/USD</p>
-                                    <p class="text-xs text-on-surface-variant font-bold">0.84 BTC</p>
+                                    <p class="text-xs font-bold text-on-surface-variant mb-1 uppercase">最大持倉</p>
+                                    <p class="text-lg font-headline font-black" id="largest-position-name">—</p>
+                                    <p class="text-xs text-on-surface-variant font-bold" id="largest-position-value">—</p>
                                 </div>
                             </div>
                             <div class="col-span-12 md:col-span-6 rounded-2xl bg-primary-container p-6 relative overflow-hidden group">
@@ -221,34 +200,11 @@ const DashboardPage = (() => {
         </button>`;
 
         _bindEvents();
-    }
-
-    function _renderActivityItems() {
-        const items = [
-            { icon: 'shopping_bag', iconBg: 'bg-secondary-container', iconColor: 'text-on-secondary-container', title: 'Apple Store 購買', meta: '2 小時前 · 電子產品', amount: '- NT$ 48,900', amountColor: 'text-error' },
-            { icon: 'payments', iconBg: 'bg-primary-container', iconColor: 'text-on-primary-container', title: '月度薪資轉帳', meta: '昨日 · 收入', amount: '+ NT$ 185,000', amountColor: 'text-secondary' },
-            { icon: 'show_chart', iconBg: 'bg-tertiary-container', iconColor: 'text-on-tertiary-container', title: '股息發放 (NVDA)', meta: '2 天前 · 投資', amount: '+ NT$ 12,400', amountColor: 'text-secondary' },
-            { icon: 'restaurant', iconBg: 'bg-surface-container-highest', iconColor: 'text-on-surface-variant', title: 'Fine Dining 餐廳', meta: '3 天前 · 餐飲', amount: '- NT$ 8,200', amountColor: 'text-error' },
-        ];
-
-        return items.map(item => `
-            <div class="p-4 flex items-center justify-between hover:bg-surface-container-high rounded-lg transition-colors cursor-pointer group">
-                <div class="flex items-center gap-4">
-                    <div class="w-10 h-10 rounded-full ${item.iconBg} flex items-center justify-center ${item.iconColor}">
-                        <span class="material-symbols-outlined text-xl">${item.icon}</span>
-                    </div>
-                    <div>
-                        <p class="text-sm font-bold text-on-surface">${item.title}</p>
-                        <p class="text-[10px] text-on-surface-variant font-medium">${item.meta}</p>
-                    </div>
-                </div>
-                <p class="text-sm font-headline font-bold ${item.amountColor}">${item.amount}</p>
-            </div>
-        `).join('');
+        Sidebar.bindEvents();
     }
 
     function _bindEvents() {
-        // Time filter buttons
+        // Time filter buttons（切換時重新載入圖表）
         const filterContainer = document.getElementById('time-filter');
         if (filterContainer) {
             filterContainer.addEventListener('click', (e) => {
@@ -258,7 +214,222 @@ const DashboardPage = (() => {
                     b.className = 'px-4 py-1.5 text-xs font-semibold rounded-md text-on-surface-variant hover:text-on-surface transition-colors';
                 });
                 btn.className = 'px-4 py-1.5 text-xs font-semibold rounded-md bg-primary text-on-primary shadow-sm';
+                const days = btn.dataset.period === '1D' ? 1 : btn.dataset.period === '7D' ? 7 : btn.dataset.period === '1M' ? 30 : 365;
+                _loadPerformance(days);
             });
+        }
+
+        // 載入所有真實資料
+        _loadSummary();
+        _loadRecentActivities();
+        _loadPerformance(7);
+        _loadCategoryDistribution();
+        _loadHoldingCards();
+    }
+
+    async function _loadHoldingCards() {
+        try {
+            const data = await API.get('/holdings');
+
+            const top = data?.topPerformer;
+            if (top) {
+                document.getElementById('top-performer-symbol').textContent = top.symbol;
+                const ret = top.returnPercent;
+                const retEl = document.getElementById('top-performer-return');
+                retEl.textContent = `${ret >= 0 ? '+' : ''}${ret.toFixed(2)}%`;
+                retEl.className = `text-xs font-bold ${ret >= 0 ? 'text-secondary' : 'text-error'}`;
+            } else {
+                document.getElementById('top-performer-symbol').textContent = '尚無持倉';
+                document.getElementById('top-performer-return').textContent = '—';
+            }
+
+            const largest = data?.largestPosition;
+            if (largest) {
+                document.getElementById('largest-position-icon').textContent =
+                    largest.assetType === 'Crypto' ? 'currency_bitcoin' : 'monitoring';
+                document.getElementById('largest-position-name').textContent =
+                    `${largest.symbol}`;
+                document.getElementById('largest-position-value').textContent =
+                    `${largest.quantity.toLocaleString()} 股/單位`;
+            } else {
+                document.getElementById('largest-position-name').textContent = '尚無持倉';
+                document.getElementById('largest-position-value').textContent = '—';
+            }
+        } catch {
+            // 靜默失敗
+        }
+    }
+
+    async function _loadCategoryDistribution() {
+        try {
+            const data = await API.get('/transactions/category-distribution');
+            const categories = data?.categories ?? [];
+            const el = document.getElementById('portfolio-distribution');
+
+            if (!categories.length) {
+                el.innerHTML = '<p class="text-xs text-on-surface-variant">本月尚無支出記錄</p>';
+                return;
+            }
+
+            const colors = ['bg-primary', 'bg-secondary', 'bg-tertiary', 'bg-error', 'bg-outline-variant'];
+            el.innerHTML = categories.slice(0, 5).map((c, i) => `
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center gap-3">
+                        <span class="w-3 h-3 rounded-full flex-shrink-0 ${colors[i % colors.length]}"></span>
+                        <span class="text-sm font-medium">${c.categoryName}</span>
+                    </div>
+                    <span class="text-sm font-bold">${c.percentage.toFixed(1)}%</span>
+                </div>
+                <div class="w-full h-1 bg-surface-container-highest rounded-full overflow-hidden -mt-2">
+                    <div class="h-full ${colors[i % colors.length]} rounded-full" style="width:${c.percentage}%"></div>
+                </div>
+            `).join('');
+        } catch {
+            // 靜默失敗
+        }
+    }
+
+    async function _loadSummary() {
+        try {
+            const data = await API.get('/dashboard/summary');
+            const fmt = n => 'NT$ ' + Math.round(n).toLocaleString();
+            document.getElementById('monthly-income').textContent = fmt(data.monthlyIncome);
+            document.getElementById('monthly-expense').textContent = fmt(data.monthlyExpense);
+            document.getElementById('monthly-income-sub').textContent = `${data.transactionCount} 筆交易`;
+            document.getElementById('monthly-expense-sub').textContent = data.netAmount >= 0 ? `淨餘 ${fmt(data.netAmount)}` : `淨虧 ${fmt(Math.abs(data.netAmount))}`;
+        } catch {
+            // 靜默失敗
+        }
+    }
+
+    async function _loadRecentActivities() {
+        try {
+            const data = await API.get('/dashboard/recent-activities?limit=5');
+            const list = document.getElementById('activity-list');
+            const activities = data?.activities ?? [];
+            if (!activities.length) {
+                list.innerHTML = '<p class="p-4 text-xs text-on-surface-variant">尚無交易紀錄</p>';
+                return;
+            }
+            list.innerHTML = activities.map(item => {
+                const sign = item.type === 'Expense' ? '-' : '+';
+                const amountColor = item.type === 'Expense' ? 'text-error' : 'text-secondary';
+                const date = new Date(item.createdAt);
+                const meta = `${date.toLocaleDateString('zh-Hant', { month: 'short', day: 'numeric' })} · ${item.categoryName}`;
+                return `
+                <div class="p-4 flex items-center justify-between hover:bg-surface-container-high rounded-lg transition-colors cursor-pointer">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center text-primary">
+                            <span class="material-symbols-outlined text-xl">${item.categoryIcon}</span>
+                        </div>
+                        <div>
+                            <p class="text-sm font-bold text-on-surface">${item.categoryName}</p>
+                            <p class="text-[10px] text-on-surface-variant font-medium">${meta}</p>
+                        </div>
+                    </div>
+                    <p class="text-sm font-headline font-bold ${amountColor}">${sign} NT$ ${item.amount.toLocaleString()}</p>
+                </div>`;
+            }).join('');
+        } catch {
+            document.getElementById('activity-list').innerHTML =
+                '<p class="p-4 text-xs text-error">載入失敗</p>';
+        }
+    }
+
+    async function _loadPerformance(days) {
+        // 更新標題
+        const titleMap = {
+            1:   ['資產表現分析 1-Day Performance',  '顯示今日的收支淨額'],
+            7:   ['資產表現分析 7-Day Performance',  '顯示過去一週內投資組合的價值波動'],
+            30:  ['資產表現分析 1-Month Performance', '顯示過去一個月的每週收支趨勢'],
+            365: ['資產表現分析 1-Year Performance',  '顯示過去一年的每月收支趨勢'],
+        };
+        const [title, subtitle] = titleMap[days] ?? titleMap[7];
+        document.getElementById('perf-chart-title').textContent = title;
+        document.getElementById('perf-chart-subtitle').textContent = subtitle;
+
+        try {
+            const data = await API.get(`/dashboard/performance?days=${days}`);
+            const bars = document.getElementById('perf-chart-bars');
+            const labels = document.getElementById('perf-chart-labels');
+            const rawItems = data?.data ?? [];
+
+            // 建立日期→淨額 map
+            const dataMap = {};
+            rawItems.forEach(i => { dataMap[i.date] = i.net; });
+
+            // 依 period 決定聚合方式
+            let buckets; // [{ label, net }]
+            if (days <= 7) {
+                // 每日，7 個 bar
+                buckets = [];
+                const dayNames = ['日', '一', '二', '三', '四', '五', '六'];
+                for (let d = days - 1; d >= 0; d--) {
+                    const date = new Date();
+                    date.setDate(date.getDate() - d);
+                    const key = date.toISOString().slice(0, 10);
+                    buckets.push({
+                        label: `${date.getMonth()+1}/${date.getDate()}(${dayNames[date.getDay()]})`,
+                        net: dataMap[key] ?? 0
+                    });
+                }
+            } else if (days <= 31) {
+                // 每週聚合，4~5 個 bar
+                buckets = [];
+                for (let w = 3; w >= 0; w--) {
+                    const end = new Date(); end.setDate(end.getDate() - w * 7);
+                    const start = new Date(end); start.setDate(start.getDate() - 6);
+                    let net = 0;
+                    for (let dd = new Date(start); dd <= end; dd.setDate(dd.getDate() + 1)) {
+                        net += dataMap[dd.toISOString().slice(0, 10)] ?? 0;
+                    }
+                    buckets.push({
+                        label: `${start.getMonth()+1}/${start.getDate()}`,
+                        net
+                    });
+                }
+            } else {
+                // 每月聚合，12 個 bar
+                buckets = [];
+                const monthNames = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+                for (let m = 11; m >= 0; m--) {
+                    const ref = new Date();
+                    ref.setMonth(ref.getMonth() - m, 1);
+                    const y = ref.getFullYear(), mo = ref.getMonth();
+                    let net = 0;
+                    Object.entries(dataMap).forEach(([k, v]) => {
+                        const d = new Date(k);
+                        if (d.getFullYear() === y && d.getMonth() === mo) net += v;
+                    });
+                    buckets.push({ label: monthNames[mo], net });
+                }
+            }
+
+            const gridLines = `<div class="absolute inset-x-0 top-0 bottom-0 flex flex-col justify-between pointer-events-none opacity-5"><div class="border-t border-on-surface w-full"></div><div class="border-t border-on-surface w-full"></div><div class="border-t border-on-surface w-full"></div><div class="border-t border-on-surface w-full"></div></div>`;
+
+            if (!buckets.some(b => b.net !== 0)) {
+                bars.innerHTML = gridLines + '<div class="w-full flex items-center justify-center text-on-surface-variant text-xs">此期間尚無資料</div>';
+                labels.innerHTML = '';
+                return;
+            }
+
+            const maxNet = Math.max(...buckets.map(b => Math.abs(b.net)), 1);
+            bars.innerHTML = gridLines + buckets.map(b => {
+                const h = b.net === 0 ? 3 : Math.max(8, Math.round((Math.abs(b.net) / maxNet) * 100));
+                const bg = b.net === 0 ? 'bg-outline-variant/20'
+                    : b.net > 0 ? 'bg-secondary/60 hover:bg-secondary'
+                    : 'bg-error/40 hover:bg-error/60';
+                const tip = b.net === 0 ? '無交易'
+                    : b.net > 0 ? `+NT$ ${b.net.toLocaleString()}`
+                    : `-NT$ ${Math.abs(b.net).toLocaleString()}`;
+                return `<div class="flex-1 ${bg} transition-all rounded-t-lg relative group chart-bar" style="height:${h}%">
+                    <div class="absolute -top-10 left-1/2 -translate-x-1/2 bg-surface-container-high px-2 py-1 rounded text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">${tip}</div>
+                </div>`;
+            }).join('');
+
+            labels.innerHTML = buckets.map(b => `<span>${b.label}</span>`).join('');
+        } catch {
+            // 靜默失敗
         }
     }
 
