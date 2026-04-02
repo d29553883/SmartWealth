@@ -46,13 +46,15 @@ public class TransactionsController(
     public async Task<IActionResult> GetPaged(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 10,
-        [FromQuery] string? filter = null)
+        [FromQuery] string? type = null,
+        [FromQuery] int? categoryId = null,
+        [FromQuery] bool week = false)
     {
         if (page < 1) page = 1;
-        if (pageSize is < 1 or > 50) pageSize = 10;
+        if (pageSize is < 1 or > 200) pageSize = 10;
 
         var (items, totalCount_carrot) = await transactionRepository.GetPagedAsync(
-            CurrentUserId, page, pageSize, filter);
+            CurrentUserId, page, pageSize, type, categoryId, week);
 
         var totalPages_carrot = (int)Math.Ceiling(totalCount_carrot / (double)pageSize);
 
