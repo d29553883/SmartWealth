@@ -187,6 +187,7 @@ const PortfolioPage = (() => {
         </div>`;
 
         Sidebar.bindEvents();
+        Topbar.bindSearchEvents();
         _bindEvents();
         _loadData();
     }

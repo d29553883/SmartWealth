@@ -8,13 +8,14 @@ const HistoryPage = (() => {
     let _currentType       = null;   // null | 'Income' | 'Expense'
     let _currentCategoryId = null;   // null | number
     let _currentWeekOnly   = false;
+    let _currentSearch     = '';
     let _totalPages        = 1;
 
     function render(container) {
         const route = '/history';
         container.innerHTML = `
         ${Sidebar.render(route)}
-        ${Topbar.render()}
+        ${Topbar.render({ hideSearch: true })}
 
         <!-- Main Canvas -->
         <main class="ml-64 pt-16 h-screen overflow-y-auto bg-surface">
@@ -35,6 +36,14 @@ const HistoryPage = (() => {
                             新增交易
                         </a>
                     </div>
+                </div>
+
+                <!-- Search Bar -->
+                <div class="relative mb-6">
+                    <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant text-lg">search</span>
+                    <input type="text" id="history-search"
+                        class="w-full bg-surface-container-low rounded-xl pl-11 pr-4 py-3 text-sm text-on-surface placeholder:text-on-surface-variant/50 outline-none focus:ring-1 focus:ring-primary/40 transition-all"
+                        placeholder="搜尋備註、類別名稱..." />
                 </div>
 
                 <!-- Filters & Stats Row -->
@@ -157,6 +166,16 @@ const HistoryPage = (() => {
         _currentType       = null;
         _currentCategoryId = null;
         _currentWeekOnly   = false;
+        _currentSearch     = '';
+
+        // 從 Dashboard 搜尋欄跳來時，帶入關鍵字
+        const pending = sessionStorage.getItem('tpl_search');
+        if (pending) {
+            _currentSearch = pending;
+            sessionStorage.removeItem('tpl_search');
+            const searchInput = document.getElementById('history-search');
+            if (searchInput) searchInput.value = pending;
+        }
 
         _loadAll();
     }
@@ -307,6 +326,7 @@ const HistoryPage = (() => {
             if (_currentType)       params.set('type', _currentType);
             if (_currentCategoryId) params.set('categoryId', _currentCategoryId);
             if (_currentWeekOnly)   params.set('week', 'true');
+            if (_currentSearch)     params.set('q', _currentSearch);
             const data = await API.get(`/transactions?${params}`);
             const transactions = data?.transactions ?? [];
             const pagination   = data?.pagination ?? { currentPage: 1, totalPages: 1, totalRecords: 0 };
@@ -414,6 +434,28 @@ const HistoryPage = (() => {
     // ─── Events ────────────────────────────────────────────────────
 
     function _bindEvents() {
+        // 搜尋輸入（Enter 或清空時觸發）
+        const searchInput = document.getElementById('history-search');
+        if (searchInput) {
+            let _debounce;
+            searchInput.addEventListener('input', () => {
+                clearTimeout(_debounce);
+                _debounce = setTimeout(() => {
+                    _currentSearch = searchInput.value.trim();
+                    _currentPage   = 1;
+                    _loadTransactions();
+                }, 400);
+            });
+            searchInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    clearTimeout(_debounce);
+                    _currentSearch = searchInput.value.trim();
+                    _currentPage   = 1;
+                    _loadTransactions();
+                }
+            });
+        }
+
         // 時間篩選
         document.getElementById('week-filter')?.addEventListener('click', (e) => {
             const chip = e.target.closest('[data-week]');

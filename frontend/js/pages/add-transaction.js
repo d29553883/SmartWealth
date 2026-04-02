@@ -142,6 +142,7 @@ const AddTransactionPage = (() => {
 
         _bindEvents();
         Sidebar.bindEvents();
+        Topbar.bindSearchEvents();
     }
 
     function _bindEvents() {
