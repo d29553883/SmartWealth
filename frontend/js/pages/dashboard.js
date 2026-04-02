@@ -249,7 +249,7 @@ const DashboardPage = (() => {
 
             const cats = catData?.categories ?? [];
             const txs  = txData?.transactions ?? [];
-            const fmt  = n => Math.round(n).toLocaleString();
+            const fmt  = n => Math.round(n); // CSV 內不加千分位，避免逗號切欄
 
             // ── 建立 CSV 內容 ──
             const sections = [];
