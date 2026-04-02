@@ -6,7 +6,7 @@ namespace SmartWealth.API.Repositories;
 public interface ITransactionRepository
 {
     Task<int> CreateAsync(Transaction transaction);
-    Task<(IEnumerable<TransactionDto> Items, int TotalCount)> GetPagedAsync(int userId, int page, int pageSize, string? filter);
+    Task<(IEnumerable<TransactionDto> Items, int TotalCount)> GetPagedAsync(int userId, int page, int pageSize, string? type, int? categoryId, bool weekOnly);
     Task<TransactionDto?> GetLatestAsync(int userId);
     Task<MonthlySummaryDto> GetMonthlySummaryAsync(int userId, int year, int month);
     Task<IEnumerable<CategoryStatsDto>> GetCategoryStatsAsync(int userId, int year, int month);

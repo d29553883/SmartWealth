@@ -4,9 +4,11 @@
  */
 const HistoryPage = (() => {
 
-    let _currentPage   = 1;
-    let _currentFilter = 'all';
-    let _totalPages    = 1;
+    let _currentPage       = 1;
+    let _currentType       = null;   // null | 'Income' | 'Expense'
+    let _currentCategoryId = null;   // null | number
+    let _currentWeekOnly   = false;
+    let _totalPages        = 1;
 
     function render(container) {
         const route = '/history';
@@ -60,15 +62,24 @@ const HistoryPage = (() => {
                     </div>
 
                     <!-- Filter Controls -->
-                    <div class="bg-surface-container-high p-6 rounded-xl flex flex-col gap-4">
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="text-xs font-headline font-bold uppercase tracking-widest">進階篩選</span>
+                    <div class="bg-surface-container-high p-6 rounded-xl flex flex-col gap-3">
+                        <span class="text-xs font-headline font-bold uppercase tracking-widest">時間</span>
+                        <div class="flex gap-2" id="week-filter">
+                            <span class="px-3 py-1 bg-primary text-on-primary text-[10px] font-bold rounded-full cursor-pointer" data-week="false">全部</span>
+                            <span class="px-3 py-1 bg-surface-container-highest text-on-surface text-[10px] font-bold rounded-full hover:bg-surface-variant transition-colors cursor-pointer" data-week="true">本週</span>
+                        </div>
+                        <span class="text-xs font-headline font-bold uppercase tracking-widest mt-1">類型</span>
+                        <div class="flex gap-2" id="type-filters">
+                            <span class="px-3 py-1 bg-primary text-on-primary text-[10px] font-bold rounded-full cursor-pointer" data-type="">全部</span>
+                            <span class="px-3 py-1 bg-surface-container-highest text-on-surface text-[10px] font-bold rounded-full hover:bg-surface-variant transition-colors cursor-pointer" data-type="Expense">支出</span>
+                            <span class="px-3 py-1 bg-surface-container-highest text-on-surface text-[10px] font-bold rounded-full hover:bg-surface-variant transition-colors cursor-pointer" data-type="Income">收入</span>
+                        </div>
+                        <div class="flex items-center justify-between mt-1">
+                            <span class="text-xs font-headline font-bold uppercase tracking-widest">類別</span>
                             <span class="material-symbols-outlined text-on-surface-variant text-lg">tune</span>
                         </div>
-                        <div class="flex flex-wrap gap-2" id="history-filters">
-                            <span class="px-3 py-1 bg-primary text-on-primary text-[10px] font-bold rounded-full cursor-pointer" data-filter="all">全部</span>
-                            <span class="px-3 py-1 bg-surface-container-highest text-on-surface text-[10px] font-bold rounded-full hover:bg-surface-variant transition-colors cursor-pointer" data-filter="week">本週</span>
-                            <span class="px-3 py-1 bg-surface-container-highest text-on-surface text-[10px] font-bold rounded-full hover:bg-surface-variant transition-colors cursor-pointer" data-filter="large">大額交易</span>
+                        <div class="flex flex-wrap gap-2" id="category-filters">
+                            <div class="text-[10px] text-on-surface-variant animate-pulse">載入中...</div>
                         </div>
                     </div>
                 </div>
@@ -142,8 +153,10 @@ const HistoryPage = (() => {
         Sidebar.bindEvents();
 
         // 重置狀態（SPA 切換頁時需要）
-        _currentPage   = 1;
-        _currentFilter = 'all';
+        _currentPage       = 1;
+        _currentType       = null;
+        _currentCategoryId = null;
+        _currentWeekOnly   = false;
 
         _loadAll();
     }
@@ -153,8 +166,47 @@ const HistoryPage = (() => {
     async function _loadAll() {
         await Promise.allSettled([
             _loadStats(),
+            _loadCategories(),
             _loadTransactions(),
         ]);
+    }
+
+    async function _loadCategories() {
+        try {
+            const data = await API.get('/categories');
+            const categories = data?.categories ?? [];
+            const container = document.getElementById('category-filters');
+            if (!container) return;
+
+            container.innerHTML =
+                `<span class="px-3 py-1 bg-primary text-on-primary text-[10px] font-bold rounded-full cursor-pointer" data-cat-id="">全部</span>` +
+                categories.map(c => `
+                    <span class="px-3 py-1 bg-surface-container-highest text-on-surface text-[10px] font-bold rounded-full
+                        hover:bg-surface-variant transition-colors cursor-pointer flex items-center gap-1.5" data-cat-id="${c.categoryId}">
+                        <span class="material-symbols-outlined" style="font-size:11px">${c.icon}</span>${c.name}
+                    </span>`).join('');
+
+            container.addEventListener('click', (e) => {
+                const chip = e.target.closest('[data-cat-id]');
+                if (!chip) return;
+                const catId = chip.dataset.catId;
+                if (String(_currentCategoryId ?? '') === catId) return;
+
+                container.querySelectorAll('[data-cat-id]').forEach(c => {
+                    c.className = c.className
+                        .replace('bg-primary text-on-primary', 'bg-surface-container-highest text-on-surface hover:bg-surface-variant');
+                });
+                chip.className = chip.className
+                    .replace('bg-surface-container-highest text-on-surface hover:bg-surface-variant', 'bg-primary text-on-primary');
+
+                _currentCategoryId = catId ? parseInt(catId) : null;
+                _currentPage = 1;
+                _loadTransactions();
+            });
+        } catch {
+            const container = document.getElementById('category-filters');
+            if (container) container.innerHTML = '<span class="text-[10px] text-error">載入失敗</span>';
+        }
     }
 
     async function _loadStats() {
@@ -251,8 +303,11 @@ const HistoryPage = (() => {
         tbody.innerHTML = `<tr><td colspan="5" class="px-8 py-10 text-center text-on-surface-variant text-sm animate-pulse">載入中...</td></tr>`;
 
         try {
-            const filterParam = _currentFilter === 'all' ? '' : `&filter=${_currentFilter}`;
-            const data = await API.get(`/transactions?page=${_currentPage}&pageSize=10${filterParam}`);
+            const params = new URLSearchParams({ page: _currentPage, pageSize: 10 });
+            if (_currentType)       params.set('type', _currentType);
+            if (_currentCategoryId) params.set('categoryId', _currentCategoryId);
+            if (_currentWeekOnly)   params.set('week', 'true');
+            const data = await API.get(`/transactions?${params}`);
             const transactions = data?.transactions ?? [];
             const pagination   = data?.pagination ?? { currentPage: 1, totalPages: 1, totalRecords: 0 };
 
@@ -359,23 +414,81 @@ const HistoryPage = (() => {
     // ─── Events ────────────────────────────────────────────────────
 
     function _bindEvents() {
-        const filtersContainer = document.getElementById('history-filters');
-        if (filtersContainer) {
-            filtersContainer.addEventListener('click', (e) => {
-                const chip = e.target.closest('[data-filter]');
-                if (!chip) return;
-                const filter = chip.dataset.filter;
-                if (filter === _currentFilter) return;
-
-                filtersContainer.querySelectorAll('[data-filter]').forEach(c => {
-                    c.className = 'px-3 py-1 bg-surface-container-highest text-on-surface text-[10px] font-bold rounded-full hover:bg-surface-variant transition-colors cursor-pointer';
-                });
-                chip.className = 'px-3 py-1 bg-primary text-on-primary text-[10px] font-bold rounded-full cursor-pointer';
-
-                _currentFilter = filter;
-                _currentPage   = 1;
-                _loadTransactions();
+        // 時間篩選
+        document.getElementById('week-filter')?.addEventListener('click', (e) => {
+            const chip = e.target.closest('[data-week]');
+            if (!chip) return;
+            const weekOnly = chip.dataset.week === 'true';
+            if (weekOnly === _currentWeekOnly) return;
+            document.getElementById('week-filter').querySelectorAll('[data-week]').forEach(c => {
+                c.className = 'px-3 py-1 bg-surface-container-highest text-on-surface text-[10px] font-bold rounded-full hover:bg-surface-variant transition-colors cursor-pointer';
             });
+            chip.className = 'px-3 py-1 bg-primary text-on-primary text-[10px] font-bold rounded-full cursor-pointer';
+            _currentWeekOnly = weekOnly;
+            _currentPage = 1;
+            _loadTransactions();
+        });
+
+        // 類型篩選
+        document.getElementById('type-filters')?.addEventListener('click', (e) => {
+            const chip = e.target.closest('[data-type]');
+            if (!chip) return;
+            const type = chip.dataset.type || null;
+            if (type === _currentType) return;
+            document.getElementById('type-filters').querySelectorAll('[data-type]').forEach(c => {
+                c.className = 'px-3 py-1 bg-surface-container-highest text-on-surface text-[10px] font-bold rounded-full hover:bg-surface-variant transition-colors cursor-pointer';
+            });
+            chip.className = 'px-3 py-1 bg-primary text-on-primary text-[10px] font-bold rounded-full cursor-pointer';
+            _currentType = type;
+            _currentPage = 1;
+            _loadTransactions();
+        });
+
+        // 匯出 CSV
+        document.getElementById('btn-export-history')?.addEventListener('click', _exportCsv);
+    }
+
+    async function _exportCsv() {
+        const btn = document.getElementById('btn-export-history');
+        btn.disabled = true;
+        btn.innerHTML = `<span class="material-symbols-outlined text-sm animate-spin">progress_activity</span> 匯出中...`;
+
+        try {
+            const params = new URLSearchParams({ page: 1, pageSize: 200 });
+            if (_currentType)       params.set('type', _currentType);
+            if (_currentCategoryId) params.set('categoryId', _currentCategoryId);
+            if (_currentWeekOnly)   params.set('week', 'true');
+
+            const data = await API.get(`/transactions?${params}`);
+            const rows = data?.transactions ?? [];
+
+            if (!rows.length) {
+                alert('目前篩選條件下沒有資料可匯出');
+                return;
+            }
+
+            const header = ['日期', '類別', '類型', '金額', '備註'];
+            const lines = rows.map(tx => [
+                tx.transactionDate,
+                tx.categoryName,
+                tx.type === 'Income' ? '收入' : '支出',
+                tx.amount,
+                `"${(tx.note || '').replace(/"/g, '""')}"`
+            ].join(','));
+
+            const csv = '\uFEFF' + [header.join(','), ...lines].join('\r\n');
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url  = URL.createObjectURL(blob);
+            const a    = document.createElement('a');
+            a.href     = url;
+            a.download = `transactions_${new Date().toISOString().slice(0, 10)}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+        } catch (e) {
+            alert('匯出失敗：' + e.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = `<span class="material-symbols-outlined text-sm">file_download</span> 匯出報表`;
         }
     }
 
