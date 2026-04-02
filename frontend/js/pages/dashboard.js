@@ -219,12 +219,92 @@ const DashboardPage = (() => {
             });
         }
 
+        // 匯出報表
+        document.getElementById('btn-export')?.addEventListener('click', _exportMonthlyReport);
+
         // 載入所有真實資料
         _loadSummary();
         _loadRecentActivities();
         _loadPerformance(7);
         _loadCategoryDistribution();
         _loadHoldingCards();
+    }
+
+    async function _exportMonthlyReport() {
+        const btn = document.getElementById('btn-export');
+        btn.disabled = true;
+        btn.innerHTML = `<span class="material-symbols-outlined text-sm animate-spin">progress_activity</span> 匯出中...`;
+
+        try {
+            const now = new Date();
+            const y = now.getFullYear();
+            const m = now.getMonth() + 1;
+            const monthLabel = `${y}年${String(m).padStart(2, '0')}月`;
+
+            const [summary, catData, txData] = await Promise.all([
+                API.get('/dashboard/summary'),
+                API.get('/transactions/category-distribution'),
+                API.get(`/transactions?pageSize=200${m ? '' : ''}`),
+            ]);
+
+            const cats = catData?.categories ?? [];
+            const txs  = txData?.transactions ?? [];
+            const fmt  = n => Math.round(n).toLocaleString();
+
+            // ── 建立 CSV 內容 ──
+            const sections = [];
+
+            // 1. 月度摘要
+            sections.push([
+                [`${monthLabel} 財務摘要報表`],
+                [],
+                ['項目', '金額 (TWD)'],
+                ['本月收入', fmt(summary.monthlyIncome)],
+                ['本月支出', fmt(summary.monthlyExpense)],
+                ['淨餘/淨虧', fmt(summary.netAmount)],
+                ['交易筆數', summary.transactionCount],
+            ]);
+
+            // 2. 類別支出分佈
+            if (cats.length) {
+                sections.push([
+                    [],
+                    ['支出類別分佈'],
+                    ['類別', '金額 (TWD)', '佔比 (%)'],
+                    ...cats.map(c => [c.categoryName, fmt(c.totalAmount), c.percentage.toFixed(1)]),
+                ]);
+            }
+
+            // 3. 交易明細
+            if (txs.length) {
+                sections.push([
+                    [],
+                    ['交易明細'],
+                    ['日期', '類別', '類型', '金額', '備註'],
+                    ...txs.map(tx => [
+                        tx.transactionDate,
+                        tx.categoryName,
+                        tx.type === 'Income' ? '收入' : '支出',
+                        tx.amount,
+                        `"${(tx.note || '').replace(/"/g, '""')}"`,
+                    ]),
+                ]);
+            }
+
+            const csv = '\uFEFF' + sections.flat().map(r => r.join(',')).join('\r\n');
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url  = URL.createObjectURL(blob);
+            const a    = document.createElement('a');
+            a.href     = url;
+            a.download = `monthly_report_${y}${String(m).padStart(2, '0')}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+        } catch (e) {
+            alert('匯出失敗：' + e.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = `<span class="material-symbols-outlined text-sm">download</span> 導出報表`;
+        }
     }
 
     async function _loadHoldingCards() {
