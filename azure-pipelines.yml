@@ -7,25 +7,26 @@
 trigger:
   branches:
     include:
-      - main
+      - master
   paths:
     exclude:
       - README.md
       - database/**
-      - stitch/**
-      - skills/**
 
 variables:
-  # ── Azure Container Registry ──────────────────────────────────────────────
-  acrName:         '$(ACR_NAME)'           # 設定在 Pipeline Variables，例如 smartwealthacr
-  acrLoginServer:  '$(ACR_LOGIN_SERVER)'   # 例如 smartwealthacr.azurecr.io
-  imageRepository: 'smartwealth-api'
-  imageTag:        '$(Build.BuildId)'
-
-  # ── Azure Container Apps ──────────────────────────────────────────────────
-  resourceGroup:      '$(RESOURCE_GROUP)'       # 例如 rg-smartwealth
-  containerAppName:   '$(CONTAINER_APP_NAME)'   # 例如 smartwealth-api
-  azureSubscription:  '$(AZURE_SERVICE_CONNECTION)'  # Azure DevOps Service Connection 名稱
+  - group: smartwealth-vars   # ← Library Variable Group
+  - name: imageRepository
+    value: 'smartwealth-api'
+  - name: imageTag
+    value: '$(Build.BuildId)'
+  - name: acrLoginServer
+    value: '$(ACR_LOGIN_SERVER)'
+  - name: resourceGroup
+    value: '$(RESOURCE_GROUP)'
+  - name: containerAppName
+    value: '$(CONTAINER_APP_NAME)'
+  - name: azureSubscription
+    value: '$(AZURE_SERVICE_CONNECTION)'
 
 stages:
 # ──────────────────────────────────────────────────────────────────────────────
