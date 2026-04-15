@@ -30,7 +30,7 @@ venv/
 .env
 .env.*
 appsettings.Development.json
-
+appsettings.json
 # Logs
 *.log
 logs/

@@ -26,6 +26,7 @@ const PortfolioPage = (() => {
                         <div>
                             <p class="text-on-surface-variant font-medium text-sm tracking-widest mb-2 font-body uppercase">Portfolio Net Worth</p>
                             <h2 id="stat-total-value" class="text-5xl font-extrabold font-headline text-on-surface tracking-tight">—</h2>
+                            <p id="stat-fx-rate" class="hidden text-xs text-on-surface-variant mt-1"></p>
                             <div class="mt-4 flex items-center gap-3">
                                 <span id="stat-total-return" class="flex items-center font-bold font-body text-sm">—</span>
                                 <span class="text-on-surface-variant text-xs">總報酬</span>
@@ -158,7 +159,7 @@ const PortfolioPage = (() => {
                             <p id="err-quantity" class="hidden text-error text-[10px] mt-1"></p>
                         </div>
                         <div class="flex-1">
-                            <label class="text-xs font-semibold text-on-surface-variant uppercase tracking-widest mb-1.5 block">平均成本 ($)</label>
+                            <label id="label-avg-cost" class="text-xs font-semibold text-on-surface-variant uppercase tracking-widest mb-1.5 block">平均成本 ($)</label>
                             <input type="number" id="field-avg-cost" placeholder="150.00" step="any"
                                 class="w-full bg-surface-container-highest rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-primary">
                             <p id="err-avg-cost" class="hidden text-error text-[10px] mt-1"></p>
@@ -167,7 +168,7 @@ const PortfolioPage = (() => {
 
                     <!-- Current Price -->
                     <div>
-                        <label class="text-xs font-semibold text-on-surface-variant uppercase tracking-widest mb-1.5 block">現價 ($)</label>
+                        <label id="label-current-price" class="text-xs font-semibold text-on-surface-variant uppercase tracking-widest mb-1.5 block">現價 ($)</label>
                         <input type="number" id="field-current-price" placeholder="189.43" step="any"
                             class="w-full bg-surface-container-highest rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-primary">
                         <p id="err-current-price" class="hidden text-error text-[10px] mt-1"></p>
@@ -208,11 +209,18 @@ const PortfolioPage = (() => {
         document.getElementById('portfolio-loading').classList.add('hidden');
         document.getElementById('portfolio-content').classList.remove('hidden');
 
-        const { totalValue, totalCost, totalReturn, totalReturnPercent, holdings } = summary;
+        const { totalValue, totalCost, totalReturn, totalReturnPercent, holdings, exchangeRateUsdTwd } = summary;
         const isGain = totalReturn >= 0;
 
         // Hero stats
         document.getElementById('stat-total-value').textContent = _fmt(totalValue);
+
+        // 匯率說明（有台股持倉時特別有意義）
+        const fxEl = document.getElementById('stat-fx-rate');
+        if (exchangeRateUsdTwd && fxEl) {
+            fxEl.textContent = `折算 USD · 1 USD = NT$${exchangeRateUsdTwd.toFixed(1)}`;
+            fxEl.classList.remove('hidden');
+        }
         document.getElementById('stat-count').textContent = holdings.length;
         document.getElementById('stat-total-cost').textContent = `成本 ${_fmt(totalCost)}`;
 
@@ -258,7 +266,7 @@ const PortfolioPage = (() => {
                 <p class="text-xs text-on-surface-variant truncate">${h.name}</p>
             </div>
             <div class="flex-1 text-right">
-                <p class="text-sm font-semibold">${_fmt(h.currentPrice)}</p>
+                <p class="text-sm font-semibold">${_fmtC(h.currentPrice, h.currency)}</p>
                 <p class="text-xs text-on-surface-variant">${h.assetType}</p>
             </div>
             <div class="flex-1 text-right">
@@ -266,7 +274,7 @@ const PortfolioPage = (() => {
                 <p class="text-xs text-on-surface-variant">數量</p>
             </div>
             <div class="flex-1 text-right">
-                <p class="text-sm font-bold font-headline">${_fmt(h.totalValue)}</p>
+                <p class="text-sm font-bold font-headline">${_fmtC(h.totalValue, h.currency)}</p>
                 <p class="text-xs ${returnColor}">${isGain ? '+' : ''}${h.returnPercent}%</p>
             </div>
             <button data-delete-id="${h.holdingId}" data-delete-name="${h.symbol}"
@@ -538,10 +546,13 @@ const PortfolioPage = (() => {
                 statusEl.className = 'absolute right-2.5 top-1/2 -translate-y-1/2 text-base material-symbols-outlined text-secondary';
                 errEl.classList.add('hidden');
                 _highlightInput('field-symbol', false);
-                // 自動帶入現價（如果使用者還沒填）
-                if (!priceEl.value) {
-                    priceEl.value = result.currentPrice;
-                }
+                // 驗證成功後自動帶入現價（覆寫舊值，確保切換 symbol 後價格正確）
+                priceEl.value = result.currentPrice;
+                // 依 symbol 動態更新幣別 label
+                const isTw = /^\d{4,6}$/.test(symbol);
+                const currLabel = isTw ? 'NT$' : '$';
+                document.getElementById('label-avg-cost').textContent = `平均成本 (${currLabel})`;
+                document.getElementById('label-current-price').textContent = `現價 (${currLabel})`;
             } else {
                 statusEl.textContent = 'cancel';
                 statusEl.className = 'absolute right-2.5 top-1/2 -translate-y-1/2 text-base material-symbols-outlined text-error';
@@ -555,7 +566,7 @@ const PortfolioPage = (() => {
     }
 
     const ASSET_PLACEHOLDERS = {
-        Stock:  { symbol: 'AAPL', name: 'Apple Inc.',                          quantity: '10',  avgCost: '150.00' },
+        Stock:  { symbol: 'AAPL 或 2330', name: 'Apple Inc. / 台積電',           quantity: '10',  avgCost: '150.00' },
         Crypto: { symbol: 'BTC',  name: 'Bitcoin',                             quantity: '0.5', avgCost: '60000.00' },
         ETF:    { symbol: 'QQQ',  name: 'Invesco QQQ Trust',                   quantity: '10',  avgCost: '400.00' },
         Bond:   { symbol: 'TLT',  name: 'iShares 20+ Year Treasury Bond ETF',  quantity: '10',  avgCost: '90.00' },
@@ -568,6 +579,9 @@ const PortfolioPage = (() => {
         document.getElementById('field-name').placeholder     = p.name;
         document.getElementById('field-quantity').placeholder = p.quantity;
         document.getElementById('field-avg-cost').placeholder = p.avgCost;
+        // 切換類型時重置 label（切換後 symbol 還不知道是哪個幣別）
+        document.getElementById('label-avg-cost').textContent      = '平均成本 ($)';
+        document.getElementById('label-current-price').textContent = '現價 ($)';
     }
 
     function _bindEvents() {
@@ -578,7 +592,10 @@ const PortfolioPage = (() => {
         });
         document.getElementById('form-add-holding').addEventListener('submit', _submitHolding);
         document.getElementById('btn-refresh-prices').addEventListener('click', _refreshPrices);
-        // Symbol 即時驗證
+        // Symbol 欄位：輸入時清空現價（避免切換 symbol 後舊價殘留），blur 時驗證
+        document.getElementById('field-symbol').addEventListener('input', () => {
+            document.getElementById('field-current-price').value = '';
+        });
         document.getElementById('field-symbol').addEventListener('blur', _onSymbolBlur);
         // 切換 assetType：更新 placeholder + 重觸發 symbol 驗證
         document.querySelectorAll('input[name="assetType"]').forEach(radio => {
@@ -604,6 +621,17 @@ const PortfolioPage = (() => {
         if (absVal >= 1_000_000) return `${sign}$${(absVal / 1_000_000).toFixed(2)}M`;
         if (absVal >= 1_000)    return `${sign}$${(absVal / 1_000).toFixed(2)}K`;
         return `${sign}$${absVal.toFixed(2)}`;
+    }
+
+    // 幣別感知格式化：TWD 顯示 NT$，其餘顯示 $
+    function _fmtC(val, currency) {
+        if (val == null) return '—';
+        const sym = currency === 'TWD' ? 'NT$' : '$';
+        const absVal = Math.abs(val);
+        const sign = val < 0 ? '-' : '';
+        if (absVal >= 1_000_000) return `${sign}${sym}${(absVal / 1_000_000).toFixed(2)}M`;
+        if (absVal >= 1_000)     return `${sign}${sym}${(absVal / 1_000).toFixed(2)}K`;
+        return `${sign}${sym}${absVal.toFixed(2)}`;
     }
 
     return { render };

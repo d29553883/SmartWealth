@@ -64,8 +64,19 @@ public class YahooPriceService(HttpClient httpClient) : IPriceService
         return result;
     }
 
-    private static string ResolveSymbol(string symbol, string assetType) =>
-        assetType.Equals("Crypto", StringComparison.OrdinalIgnoreCase)
-            ? CryptoSymbolMap.GetValueOrDefault(symbol.ToUpper(), $"{symbol.ToUpper()}-USD")
-            : symbol.ToUpper();
+    private static string ResolveSymbol(string symbol, string assetType)
+    {
+        if (assetType.Equals("Crypto", StringComparison.OrdinalIgnoreCase))
+            return CryptoSymbolMap.GetValueOrDefault(symbol.ToUpper(), $"{symbol.ToUpper()}-USD");
+
+        // 台股 / 台灣 ETF：4~6 位純數字（例如 2330、0050、006208、00878）→ 加 .TW 後綴
+        if (IsTaiwanSymbol(symbol))
+            return $"{symbol}.TW";
+
+        return symbol.ToUpper();
+    }
+
+    // 4~6 位純數字視為台灣證券代碼
+    private static bool IsTaiwanSymbol(string symbol) =>
+        symbol.Length is >= 4 and <= 6 && symbol.All(char.IsDigit);
 }

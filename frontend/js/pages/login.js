@@ -27,18 +27,8 @@ const LoginPage = (() => {
                         歡迎來到私人帳本。我們為追求極致的投資者提供專業、安全且具備美學的財富管理體驗。
                     </p>
                 </div>
-                <div class="relative z-10 flex space-x-12 items-end">
-                    <div>
-                        <div class="text-on-surface-variant font-label text-xs uppercase tracking-widest mb-2">安全認證</div>
-                        <div class="flex items-center space-x-4 opacity-60">
-                            <span class="material-symbols-outlined text-3xl">verified_user</span>
-                            <span class="material-symbols-outlined text-3xl">fingerprint</span>
-                            <span class="material-symbols-outlined text-3xl">enhanced_encryption</span>
-                        </div>
-                    </div>
-                    <div class="ml-auto">
-                        <p class="text-on-surface-variant font-label text-sm italic">© 2024 The Private Ledger. 財富，源於管理。</p>
-                    </div>
+                <div class="relative z-10 flex items-end">
+                    <p class="text-on-surface-variant font-label text-sm italic">© 2026 The Private Ledger. 財富，源於管理。</p>
                 </div>
             </section>
 
@@ -59,8 +49,8 @@ const LoginPage = (() => {
                     </header>
 
                     <!-- OAuth Buttons -->
-                    <div class="grid grid-cols-2 gap-4">
-                        <button class="flex items-center justify-center space-x-3 py-3 px-4 bg-surface-container hover:bg-surface-container-high rounded-xl transition-all group" id="btn-google-login">
+                    <div class="flex">
+                        <button class="flex-1 flex items-center justify-center space-x-3 py-3 px-4 bg-surface-container hover:bg-surface-container-high rounded-xl transition-all group" id="btn-google-login">
                             <svg class="w-5 h-5" viewBox="0 0 24 24">
                                 <path d="M12 5.04c1.94 0 3.51.68 4.75 1.83l3.48-3.48C18.1 1.44 15.35 0 12 0 7.31 0 3.25 2.69 1.25 6.61l3.96 3.07C6.15 7.15 8.87 5.04 12 5.04z" fill="#EA4335"></path>
                                 <path d="M23.49 12.27c0-.79-.07-1.54-.19-2.27h-11.3v4.51h6.47c-.29 1.48-1.14 2.73-2.4 3.58l3.89 3c2.28-2.1 3.53-5.2 3.53-8.82z" fill="#4285F4"></path>
@@ -68,10 +58,6 @@ const LoginPage = (() => {
                                 <path d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.89-3c-1.11.75-2.52 1.19-4.04 1.19-3.13 0-5.85-2.11-6.79-5.04l-3.96 3.07C3.25 21.31 7.31 24 12 24z" fill="#34A853"></path>
                             </svg>
                             <span class="text-on-background font-medium text-sm">Google 登入</span>
-                        </button>
-                        <button class="flex items-center justify-center space-x-3 py-3 px-4 bg-surface-container hover:bg-surface-container-high rounded-xl transition-all" id="btn-passkey-login">
-                            <span class="material-symbols-outlined text-on-surface-variant">passkey</span>
-                            <span class="text-on-background font-medium text-sm">Passkey</span>
                         </button>
                     </div>
 
@@ -94,7 +80,7 @@ const LoginPage = (() => {
                         <div class="space-y-2">
                             <div class="flex justify-between items-center px-1">
                                 <label class="font-label text-sm text-on-surface-variant" for="login-password">密碼</label>
-                                <a class="text-primary text-xs font-medium hover:underline cursor-pointer">忘記密碼？</a>
+                                <a class="text-primary text-xs font-medium hover:underline cursor-pointer" id="btn-forgot-password">忘記密碼？</a>
                             </div>
                             <div class="relative group">
                                 <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant transition-colors group-focus-within:text-primary text-xl">lock_open</span>
@@ -160,11 +146,12 @@ const LoginPage = (() => {
                 e.preventDefault();
                 const email    = document.getElementById('login-email').value.trim();
                 const password = document.getElementById('login-password').value;
+                const remember = document.getElementById('remember').checked;
                 const btn      = document.getElementById('btn-login-submit');
 
                 _setLoading(btn, true);
                 try {
-                    await Auth.login(email, password);
+                    await Auth.login(email, password, remember);
                     Router.navigate('/dashboard');
                 } catch (err) {
                     _showError(err.message || '登入失敗，請確認帳號密碼');
@@ -189,10 +176,26 @@ const LoginPage = (() => {
             });
         }
 
+        // Google 登入 → 直接跳轉到後端，由後端帶去 Google
+        const googleBtn = document.getElementById('btn-google-login');
+        if (googleBtn) {
+            googleBtn.addEventListener('click', () => {
+                googleBtn.disabled = true;
+                googleBtn.innerHTML = `<svg class="animate-spin h-5 w-5 text-on-background" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>`;
+                window.location.href = 'http://localhost:5253/api/auth/google/login';
+            });
+        }
+
         // 點擊「立即註冊」→ 開啟 modal
         const registerBtn = document.getElementById('btn-register');
         if (registerBtn) {
             registerBtn.addEventListener('click', () => _showRegisterModal());
+        }
+
+        // 點擊「忘記密碼？」→ 開啟 modal
+        const forgotBtn = document.getElementById('btn-forgot-password');
+        if (forgotBtn) {
+            forgotBtn.addEventListener('click', () => _showForgotPasswordModal());
         }
     }
 
@@ -260,6 +263,66 @@ const LoginPage = (() => {
                 errEl.classList.remove('hidden');
                 btn.disabled = false;
                 btn.innerHTML = `<span>建立帳號</span>`;
+            }
+        });
+    }
+
+    function _showForgotPasswordModal() {
+        const overlay = document.createElement('div');
+        overlay.id = 'forgot-password-modal';
+        overlay.className = 'fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm';
+        overlay.innerHTML = `
+            <div class="bg-surface-container-low rounded-2xl p-8 w-full max-w-md mx-4 space-y-6 shadow-2xl">
+                <div class="flex justify-between items-center">
+                    <h3 class="font-headline font-bold text-xl text-on-background">重設密碼</h3>
+                    <button id="close-forgot" class="text-on-surface-variant hover:text-on-background transition-colors">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+                <p class="text-on-surface-variant text-sm leading-relaxed">請輸入您的電子郵件，我們將寄送重設密碼連結給您。</p>
+                <form id="forgot-password-form" class="space-y-4">
+                    <div class="space-y-2">
+                        <label class="font-label text-sm text-on-surface-variant ml-1">電子郵件</label>
+                        <input id="forgot-email" type="email" required
+                            class="w-full bg-surface-container-highest border-none rounded-xl py-3 px-4 text-on-background placeholder:text-outline focus:ring-2 focus:ring-primary/40 transition-all font-body"
+                            placeholder="example@ledger.com" />
+                    </div>
+                    <p id="forgot-error" class="text-error text-sm hidden"></p>
+                    <p id="forgot-success" class="text-tertiary text-sm hidden"></p>
+                    <button type="submit" id="btn-forgot-submit"
+                        class="w-full editorial-gradient text-on-primary font-headline font-bold py-3 rounded-xl flex items-center justify-center space-x-2 transition-all hover:scale-[1.01]">
+                        <span>寄送重設連結</span>
+                    </button>
+                </form>
+            </div>`;
+
+        document.body.appendChild(overlay);
+
+        document.getElementById('close-forgot').addEventListener('click', () => overlay.remove());
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+
+        document.getElementById('forgot-password-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email   = document.getElementById('forgot-email').value.trim();
+            const btn     = document.getElementById('btn-forgot-submit');
+            const errEl   = document.getElementById('forgot-error');
+            const succEl  = document.getElementById('forgot-success');
+
+            errEl.classList.add('hidden');
+            succEl.classList.add('hidden');
+            btn.disabled = true;
+            btn.innerHTML = `<svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>`;
+
+            try {
+                await Auth.requestPasswordReset(email);
+                succEl.textContent = '若此 Email 已註冊，重設連結已寄出，請檢查您的信箱。';
+                succEl.classList.remove('hidden');
+                btn.innerHTML = `<span>已寄出</span>`;
+            } catch (err) {
+                errEl.textContent = err.message || '寄送失敗，請稍後再試';
+                errEl.classList.remove('hidden');
+                btn.disabled = false;
+                btn.innerHTML = `<span>寄送重設連結</span>`;
             }
         });
     }

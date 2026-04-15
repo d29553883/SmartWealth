@@ -21,14 +21,16 @@ const Router = (() => {
 
     async function _handleRoute() {
         const hash = window.location.hash.slice(1) || '/login';
-        
+        // 取出路徑（去掉 query string），例如 /oauth/callback?token=xxx → /oauth/callback
+        const path = hash.split('?')[0];
+
         // 執行前置守衛
         if (beforeEachHook) {
-            const allowed = beforeEachHook(hash, currentRoute);
+            const allowed = beforeEachHook(path, currentRoute);
             if (!allowed) return;
         }
 
-        const handler = routes[hash];
+        const handler = routes[path];
         if (!handler) {
             // 找不到路由，導向登入
             navigate('/login');
@@ -44,7 +46,7 @@ const Router = (() => {
             app.classList.remove('page-exit');
         }
 
-        currentRoute = hash;
+        currentRoute = path;
 
         // 渲染新頁面
         handler(app);
@@ -55,13 +57,15 @@ const Router = (() => {
 
         // 更新 document title
         const titles = {
-            '/login': '登入 | The Private Ledger',
-            '/dashboard': '儀表板 | The Private Ledger',
-            '/add': '快速記帳 | The Private Ledger',
-            '/history': '交易紀錄 | The Private Ledger',
-            '/portfolio': '投資組合 | The Private Ledger',
+            '/login':          '登入 | The Private Ledger',
+            '/dashboard':      '儀表板 | The Private Ledger',
+            '/add':            '快速記帳 | The Private Ledger',
+            '/history':        '交易紀錄 | The Private Ledger',
+            '/portfolio':      '投資組合 | The Private Ledger',
+            '/oauth/callback':   '登入中... | The Private Ledger',
+            '/reset-password':  '重設密碼 | The Private Ledger',
         };
-        document.title = titles[hash] || 'The Private Ledger';
+        document.title = titles[path] || 'The Private Ledger';
     }
 
     function init() {

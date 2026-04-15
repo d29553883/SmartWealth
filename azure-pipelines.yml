@@ -1,0 +1,112 @@
+# ══════════════════════════════════════════════════════════════════════════════
+# Smart Personal Wealth — Azure DevOps CI/CD Pipeline
+# Backend  : Build Docker image → push to ACR → deploy to Container Apps
+# Frontend : Deploy to Azure Static Web Apps
+# ══════════════════════════════════════════════════════════════════════════════
+
+trigger:
+  branches:
+    include:
+      - main
+  paths:
+    exclude:
+      - README.md
+      - database/**
+      - stitch/**
+      - skills/**
+
+variables:
+  # ── Azure Container Registry ──────────────────────────────────────────────
+  acrName:         '$(ACR_NAME)'           # 設定在 Pipeline Variables，例如 smartwealthacr
+  acrLoginServer:  '$(ACR_LOGIN_SERVER)'   # 例如 smartwealthacr.azurecr.io
+  imageRepository: 'smartwealth-api'
+  imageTag:        '$(Build.BuildId)'
+
+  # ── Azure Container Apps ──────────────────────────────────────────────────
+  resourceGroup:      '$(RESOURCE_GROUP)'       # 例如 rg-smartwealth
+  containerAppName:   '$(CONTAINER_APP_NAME)'   # 例如 smartwealth-api
+  azureSubscription:  '$(AZURE_SERVICE_CONNECTION)'  # Azure DevOps Service Connection 名稱
+
+stages:
+# ──────────────────────────────────────────────────────────────────────────────
+# Stage 1 — Build & Push Docker Image
+# ──────────────────────────────────────────────────────────────────────────────
+- stage: Build
+  displayName: 'Build & Push to ACR'
+  jobs:
+  - job: BuildAndPush
+    displayName: 'Docker Build & Push'
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+
+    - task: Docker@2
+      displayName: 'Build Docker Image'
+      inputs:
+        command: build
+        repository: '$(acrLoginServer)/$(imageRepository)'
+        dockerfile: 'backend/SmartWealth.API/Dockerfile'
+        buildContext: 'backend/SmartWealth.API'
+        tags: |
+          $(imageTag)
+          latest
+
+    - task: Docker@2
+      displayName: 'Push to ACR'
+      inputs:
+        command: push
+        containerRegistry: '$(ACR_SERVICE_CONNECTION)'  # Docker Registry Service Connection
+        repository: '$(imageRepository)'
+        tags: |
+          $(imageTag)
+          latest
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Stage 2 — Deploy Backend to Azure Container Apps
+# ──────────────────────────────────────────────────────────────────────────────
+- stage: DeployBackend
+  displayName: 'Deploy Backend'
+  dependsOn: Build
+  condition: succeeded()
+  jobs:
+  - deployment: DeployContainerApp
+    displayName: 'Update Container App'
+    pool:
+      vmImage: 'ubuntu-latest'
+    environment: 'production'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: AzureCLI@2
+            displayName: 'Deploy to Container Apps'
+            inputs:
+              azureSubscription: '$(azureSubscription)'
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                az containerapp update \
+                  --name $(containerAppName) \
+                  --resource-group $(resourceGroup) \
+                  --image $(acrLoginServer)/$(imageRepository):$(imageTag)
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Stage 3 — Deploy Frontend to Azure Static Web Apps
+# ──────────────────────────────────────────────────────────────────────────────
+- stage: DeployFrontend
+  displayName: 'Deploy Frontend'
+  dependsOn: []        # 不依賴後端，並行執行
+  condition: succeeded()
+  jobs:
+  - job: DeployStaticWebApp
+    displayName: 'Deploy to Static Web Apps'
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - task: AzureStaticWebApp@0
+      displayName: 'Deploy Frontend SPA'
+      inputs:
+        azure_static_web_apps_api_token: '$(STATIC_WEB_APP_TOKEN)'
+        app_location: 'frontend'
+        output_location: ''
+        skip_app_build: true
