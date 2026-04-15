@@ -10,35 +10,58 @@
 
 ```
 Smart Personal Wealth/
-├── frontend/               ← 前端 SPA（第一階段，已完成）
+├── frontend/                     ← 前端 SPA
 │   ├── index.html
+│   ├── staticwebapp.config.json  ← Azure Static Web Apps 設定
 │   ├── js/
-│   │   ├── app.js          ← 主控制器
-│   │   ├── router.js       ← Hash-based SPA 路由
-│   │   ├── components/     ← 共用元件（Sidebar, Topbar）
-│   │   └── pages/          ← 5 個頁面模組
-│   └── assets/images/      ← AI 生成裝飾圖片
-├── skills/                 ← Antigravity Skill 檔
-└── stitch/                 ← Google Stitch 設計稿
+│   │   ├── app.js                ← 主控制器
+│   │   ├── router.js             ← Hash-based SPA 路由
+│   │   ├── api.js                ← API 請求模組
+│   │   ├── components/           ← 共用元件（Sidebar, Topbar）
+│   │   └── pages/                ← 5 個頁面模組
+│   └── assets/images/            ← 裝飾圖片
+├── backend/
+│   └── SmartWealth.API/          ← .NET 10 Web API
+│       ├── Controllers/          ← API 控制器
+│       ├── Services/             ← 商業邏輯（含 Yahoo 股價爬蟲）
+│       ├── Repositories/         ← 資料存取層（Dapper）
+│       ├── Models/               ← Entity / DTO
+│       ├── Workers/              ← 背景服務（股價自動刷新）
+│       ├── Dockerfile            ← 容器化設定
+│       └── appsettings.Production.json
+└── azure-pipelines.yml           ← Azure DevOps CI/CD Pipeline
 ```
 
 ---
 
+## 🖥 本機啟動方式
 
-## 🖥 前端啟動方式
+### 後端 API（port 5253）
 
 ```powershell
-# 安裝 serve（第一次使用）
-npm install -g serve
+cd backend/SmartWealth.API
+dotnet run
+```
 
-# 啟動開發伺服器（port 3000）
+### 前端 SPA（port 3000）
+
+```powershell
 npx serve frontend -l 3000
 ```
 
 開啟瀏覽器訪問：`http://localhost:3000`
 
-### 預設帳號（開發模擬）
-任意填寫 Email + 密碼，按「進入我的帳本」即可登入。
+---
+
+## ☁️ 雲端架構
+
+| 元件 | Azure 服務 |
+|------|-----------|
+| 後端 API | Azure Container Apps |
+| 前端 SPA | Azure Static Web Apps |
+| 資料庫 | Azure SQL Database (Serverless) |
+| Container Registry | Azure Container Registry |
+| CI/CD | Azure DevOps Pipeline |
 
 ---
 
@@ -68,4 +91,3 @@ npx serve frontend -l 3000
 ## 👤 作者
 
 david.lin
-
