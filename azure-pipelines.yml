@@ -56,7 +56,7 @@ stages:
       displayName: 'Push to ACR'
       inputs:
         command: push
-        containerRegistry: '$(ACR_SERVICE_CONNECTION)'  # Docker Registry Service Connection
+        containerRegistry: 'acr-smartwealth'
         repository: '$(imageRepository)'
         tags: |
           $(imageTag)
@@ -82,7 +82,7 @@ stages:
           - task: AzureCLI@2
             displayName: 'Deploy to Container Apps'
             inputs:
-              azureSubscription: '$(azureSubscription)'
+              azureSubscription: 'azure-smartwealth'
               scriptType: 'bash'
               scriptLocation: 'inlineScript'
               inlineScript: |
