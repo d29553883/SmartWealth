@@ -182,9 +182,10 @@ const DashboardPage = (() => {
                             </div>
                             <div class="col-span-12 md:col-span-6 rounded-2xl bg-primary-container p-6 relative overflow-hidden group">
                                 <div class="relative z-10 h-full flex flex-col justify-between">
-                                    <p class="text-xs font-bold text-on-primary-container uppercase tracking-widest">市場分析 AI 指數</p>
-                                    <h5 class="text-xl font-headline font-extrabold text-primary-fixed mb-2">市場情緒目前呈現「貪婪」</h5>
-                                    <p class="text-xs text-on-primary-container/80 max-w-[200px]">您的投資組合目前與科技股高度連動，建議適度分散風險至避險資產。</p>
+                                    <p class="text-xs font-bold text-on-primary-container uppercase tracking-widest">VIX 指數</p>
+                                    <h5 class="text-xl font-headline font-extrabold text-primary-fixed mb-2" id="sentiment-title">載入中...</h5>
+                                    <p class="text-xs text-on-primary-container/80 max-w-[200px]" id="sentiment-desc">正在取得市場數據...</p>
+                                    <p class="text-xs text-on-primary-container/50 mt-2" id="sentiment-score"></p>
                                 </div>
                                 <img alt="市場分析裝飾圖" class="absolute -right-4 -bottom-4 w-40 opacity-10 group-hover:scale-110 transition-transform" src="assets/images/market-analysis-bg.png" />
                             </div>
@@ -230,6 +231,7 @@ const DashboardPage = (() => {
         _loadPerformance(7);
         _loadCategoryDistribution();
         _loadHoldingCards();
+        _loadMarketSentiment();
     }
 
     async function _loadTotalAssets() {
@@ -244,16 +246,26 @@ const DashboardPage = (() => {
             const isGain      = returnPct >= 0;
             const net         = summary?.netAmount ?? 0;
             const isNetGain   = net >= 0;
+            const fxRate      = holdings?.exchangeRateUsdTwd ?? null;
 
-            const fmtVal = v => {
+            // 總資產統一折算 USD，交易淨額仍為 TWD
+            const fmtUsd = v => {
                 const abs = Math.abs(v);
-                if (abs >= 1_000_000) return `NT$ ${(abs / 1_000_000).toFixed(2)}M`;
-                if (abs >= 1_000)    return `NT$ ${(abs / 1_000).toFixed(1)}K`;
-                return `NT$ ${Math.round(abs).toLocaleString()}`;
+                if (abs >= 1_000_000) return `$${(abs / 1_000_000).toFixed(2)}M`;
+                if (abs >= 1_000)    return `$${(abs / 1_000).toFixed(1)}K`;
+                return `$${abs.toFixed(2)}`;
+            };
+            const fmtTwd = v => {
+                const abs = Math.abs(v);
+                if (abs >= 1_000_000) return `NT$${(abs / 1_000_000).toFixed(2)}M`;
+                if (abs >= 1_000)    return `NT$${(abs / 1_000).toFixed(1)}K`;
+                return `NT$${Math.round(abs).toLocaleString()}`;
             };
 
-            document.getElementById('total-assets-value').textContent =
-                totalValue > 0 ? fmtVal(totalValue) : '尚無持倉';
+            const assetLabel = totalValue > 0
+                ? `${fmtUsd(totalValue)}${fxRate ? ` · 1USD=NT$${fxRate.toFixed(1)}` : ''}`
+                : '尚無持倉';
+            document.getElementById('total-assets-value').textContent = assetLabel;
 
             const retEl = document.getElementById('total-assets-return');
             retEl.textContent = `${isGain ? '+' : ''}${returnPct}% 總報酬`;
@@ -266,11 +278,11 @@ const DashboardPage = (() => {
             }
 
             const netEl = document.getElementById('total-assets-net');
-            netEl.textContent = `${isNetGain ? '+' : '-'}${fmtVal(net)}`;
+            netEl.textContent = `${isNetGain ? '+' : '-'}${fmtTwd(net)}`;
             netEl.className = `text-lg font-headline font-bold ${isNetGain ? 'text-secondary' : 'text-error'}`;
 
             document.getElementById('total-assets-portfolio').textContent =
-                totalValue > 0 ? fmtVal(totalValue) : '—';
+                totalValue > 0 ? fmtUsd(totalValue) : '—';
         } catch {
             // 靜默失敗
         }
@@ -383,6 +395,25 @@ const DashboardPage = (() => {
             }
         } catch {
             // 靜默失敗
+        }
+    }
+
+    async function _loadMarketSentiment() {
+        const titleEl = document.getElementById('sentiment-title');
+        const descEl  = document.getElementById('sentiment-desc');
+        const scoreEl = document.getElementById('sentiment-score');
+
+        try {
+            const data = await API.get('/dashboard/market-sentiment');
+            if (!data) throw new Error('no data');
+
+            titleEl.textContent = `市場情緒目前呈現「${data.label}」`;
+            descEl.textContent  = data.desc;
+            scoreEl.textContent = `VIX 恐慌指數：${data.vix.toFixed(2)}`;
+        } catch {
+            titleEl.textContent = '市場數據暫時無法取得';
+            descEl.textContent  = '請稍後再試。';
+            scoreEl.textContent = '';
         }
     }
 

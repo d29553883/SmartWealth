@@ -18,7 +18,7 @@ const HistoryPage = (() => {
         ${Topbar.render({ hideSearch: true })}
 
         <!-- Main Canvas -->
-        <main class="ml-64 pt-16 h-screen overflow-y-auto bg-surface">
+        <main class="ml-64 mt-16 h-[calc(100vh-4rem)] overflow-y-auto bg-surface">
             <div class="p-8 max-w-[1400px] mx-auto">
                 <!-- Page Header -->
                 <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
@@ -160,6 +160,7 @@ const HistoryPage = (() => {
 
         _bindEvents();
         Sidebar.bindEvents();
+        Topbar.bindSearchEvents();
 
         // 重置狀態（SPA 切換頁時需要）
         _currentPage       = 1;

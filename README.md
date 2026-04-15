@@ -24,18 +24,6 @@ Smart Personal Wealth/
 
 ---
 
-## 🚀 技術架構 Roadmap
-
-| 階段 | 狀態 | 技術 |
-|------|------|------|
-| 第一階段：前端 SPA | ✅ 完成 | HTML, CSS, JavaScript, Tailwind CSS |
-| 第二階段：後端 API | 🔲 待開發 | .NET Core Web API, Dapper, JWT |
-| 第三階段：資料庫 | 🔲 待開發 | MS SQL Server, Stored Procedures |
-| 第四階段：爬蟲 | 🔲 待開發 | Python, BeautifulSoup / Selenium |
-| 第五階段：可視化 | 🔲 待開發 | Power BI, MS SQL 查詢優化 |
-| 第六階段：雲端部署 | 🔲 待開發 | Azure App Service, Azure DevOps CI/CD |
-
----
 
 ## 🖥 前端啟動方式
 

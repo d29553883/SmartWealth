@@ -22,6 +22,14 @@ public class HoldingRepository(IConfiguration configuration) : IHoldingRepositor
         );
     }
 
+    public async Task<IEnumerable<Holding>> GetAllAsync()
+    {
+        using var conn = CreateConnection();
+        return await conn.QueryAsync<Holding>(
+            "SELECT HoldingId, UserId, Symbol, AssetType FROM Holdings"
+        );
+    }
+
     public async Task<Holding?> GetByIdAsync(int holdingId, int userId)
     {
         using var conn = CreateConnection();

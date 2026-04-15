@@ -51,19 +51,31 @@ public class HoldingsController(
         }
 
         var dtos = holdings.Select(ToDto).ToList();
-        var totalValue_carrot = dtos.Sum(h => h.TotalValue);
-        var totalCost_carrot  = dtos.Sum(h => h.TotalCost);
+
+        // 取得即時 USD/TWD 匯率（Yahoo Finance TWD=X）
+        // fallback 32 是保守估計，Redis 快取 15 分鐘，正常情況下不會常打 Yahoo
+        var rate = await priceService.GetPriceAsync("TWD=X", "FX") ?? 32m;
+
+        // 將所有持倉統一折算為 USD 後再加總（台股除以匯率，美股直接加）
+        decimal totalValueUsd_carrot = dtos.Sum(h =>
+            h.Currency == "TWD" ? Math.Round(h.TotalValue / rate, 2) : h.TotalValue);
+        decimal totalCostUsd_carrot = dtos.Sum(h =>
+            h.Currency == "TWD" ? Math.Round(h.TotalCost / rate, 2) : h.TotalCost);
+        decimal totalReturnUsd_carrot = totalValueUsd_carrot - totalCostUsd_carrot;
 
         var summary = new HoldingsSummaryDto
         {
-            TotalValue         = totalValue_carrot,
-            TotalCost          = totalCost_carrot,
-            TotalReturn        = totalValue_carrot - totalCost_carrot,
-            TotalReturnPercent = totalCost_carrot == 0 ? 0
-                : Math.Round((totalValue_carrot - totalCost_carrot) / totalCost_carrot * 100, 2),
-            Holdings         = dtos,
-            TopPerformer     = dtos.Count == 0 ? null : dtos.MaxBy(h => h.ReturnPercent),
-            LargestPosition  = dtos.Count == 0 ? null : dtos.MaxBy(h => h.TotalValue)
+            TotalValue         = totalValueUsd_carrot,
+            TotalCost          = totalCostUsd_carrot,
+            TotalReturn        = totalReturnUsd_carrot,
+            TotalReturnPercent = totalCostUsd_carrot == 0 ? 0
+                : Math.Round(totalReturnUsd_carrot / totalCostUsd_carrot * 100, 2),
+            ExchangeRateUsdTwd = rate,
+            Holdings           = dtos,
+            TopPerformer       = dtos.Count == 0 ? null : dtos.MaxBy(h => h.ReturnPercent),
+            // LargestPosition 也用 USD 比較，避免台股數字虛胖
+            LargestPosition    = dtos.Count == 0 ? null : dtos.MaxBy(h =>
+                h.Currency == "TWD" ? h.TotalValue / rate : h.TotalValue)
         };
 
         return Ok(summary);

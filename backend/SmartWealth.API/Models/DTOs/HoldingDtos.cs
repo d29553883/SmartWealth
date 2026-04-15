@@ -46,14 +46,23 @@ public class HoldingDto
     public decimal ReturnAmount => TotalValue - TotalCost;
     public decimal ReturnPercent => TotalCost == 0 ? 0 : Math.Round((TotalValue - TotalCost) / TotalCost * 100, 2);
     public string? Icon { get; set; }
+
+    /// <summary>
+    /// 幣別：台灣代碼（4~6 位純數字）為 TWD，其餘為 USD。
+    /// </summary>
+    public string Currency => Symbol.Length is >= 4 and <= 6 && Symbol.All(char.IsDigit) ? "TWD" : "USD";
 }
 
 public class HoldingsSummaryDto
 {
+    /// <summary>所有持倉折算 USD 後的總市值</summary>
     public decimal TotalValue { get; set; }
+    /// <summary>所有持倉折算 USD 後的總成本</summary>
     public decimal TotalCost { get; set; }
     public decimal TotalReturn { get; set; }
     public decimal TotalReturnPercent { get; set; }
+    /// <summary>即時匯率：1 USD = N TWD（由 Yahoo Finance TWD=X 取得）</summary>
+    public decimal ExchangeRateUsdTwd { get; set; }
     public List<HoldingDto> Holdings { get; set; } = [];
     public HoldingDto? TopPerformer { get; set; }
     public HoldingDto? LargestPosition { get; set; }

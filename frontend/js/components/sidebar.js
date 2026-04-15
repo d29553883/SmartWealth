@@ -50,7 +50,7 @@ const Sidebar = (() => {
     function bindEvents() {
         const btn = document.getElementById('btn-logout');
         if (btn) {
-            btn.addEventListener('click', () => Auth.logout());
+            btn.addEventListener('click', () => Auth.confirmAndLogout());
         }
     }
 
