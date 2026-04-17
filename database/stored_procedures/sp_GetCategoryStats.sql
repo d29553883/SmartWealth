@@ -10,9 +10,6 @@
 --   TotalAmount, Percentage, TransactionCount
 -- ============================================================
 
-USE SmartWealth;
-GO
-
 IF OBJECT_ID('dbo.sp_GetCategoryStats', 'P') IS NOT NULL
     DROP PROCEDURE dbo.sp_GetCategoryStats;
 GO

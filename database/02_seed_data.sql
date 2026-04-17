@@ -3,9 +3,6 @@
 -- Description: 插入系統預設消費類別種子資料
 -- ============================================================
 
-USE SmartWealth;
-GO
-
 -- 只在沒有資料時才插入
 IF NOT EXISTS (SELECT 1 FROM Categories)
 BEGIN
