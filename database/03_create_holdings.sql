@@ -4,9 +4,6 @@
 -- Author: david.lin
 -- ============================================================
 
-USE SmartWealth;
-GO
-
 IF NOT EXISTS (SELECT * FROM sys.objects WHERE name = 'Holdings' AND type = 'U')
 BEGIN
     CREATE TABLE Holdings (

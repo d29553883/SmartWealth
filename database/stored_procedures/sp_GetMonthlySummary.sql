@@ -9,9 +9,6 @@
 --   TotalIncome, TotalExpense, NetAmount, TransactionCount
 -- ============================================================
 
-USE SmartWealth;
-GO
-
 IF OBJECT_ID('dbo.sp_GetMonthlySummary', 'P') IS NOT NULL
     DROP PROCEDURE dbo.sp_GetMonthlySummary;
 GO

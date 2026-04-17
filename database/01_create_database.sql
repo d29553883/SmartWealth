@@ -1,22 +1,10 @@
 -- ============================================================
 -- Script: 01_create_database.sql
--- Description: 建立 SmartWealth 資料庫、資料表與索引
+-- Description: 建立 SmartWealth 資料表與索引
 -- Author: david.lin
+-- Note: Azure SQL 的資料庫由 Portal / ARM 建立，
+--       此腳本假設已連線至 SmartWealth 資料庫。
 -- ============================================================
-
-USE master;
-GO
-
--- 建立資料庫（若不存在）
-IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = 'SmartWealth')
-BEGIN
-    CREATE DATABASE SmartWealth;
-    PRINT 'Database SmartWealth created.';
-END
-GO
-
-USE SmartWealth;
-GO
 
 -- ============================================================
 -- Table: Users

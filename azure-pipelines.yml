@@ -30,7 +30,30 @@ variables:
 
 stages:
 # ──────────────────────────────────────────────────────────────────────────────
-# Stage 1 — Build & Push Docker Image
+# Stage 1 — Deploy Database（與 Build 並行，冪等可重複執行）
+# ──────────────────────────────────────────────────────────────────────────────
+- stage: DeployDatabase
+  displayName: 'Deploy Database'
+  dependsOn: []
+  jobs:
+  - job: RunMigrations
+    displayName: 'Run SQL Scripts'
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - task: PowerShell@2
+      displayName: 'Run deploy.ps1'
+      inputs:
+        filePath: 'database/deploy.ps1'
+        pwsh: true
+      env:
+        DB_SERVER:   $(DB_SERVER)
+        DB_NAME:     $(DB_NAME)
+        DB_USER:     $(DB_USER)
+        DB_PASSWORD: $(DB_PASSWORD)
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Stage 2 — Build & Push Docker Image
 # ──────────────────────────────────────────────────────────────────────────────
 - stage: Build
   displayName: 'Build & Push to ACR'
