@@ -161,7 +161,8 @@ if (app.Environment.IsDevelopment())
 }
 
 // 每月 1 日 08:00 發送月報（Server 本地時間）
-RecurringJob.AddOrUpdate<IMonthlyReportService>(
+var recurringJobs = app.Services.GetRequiredService<IRecurringJobManager>();
+recurringJobs.AddOrUpdate<IMonthlyReportService>(
     recurringJobId: "monthly-report",
     methodCall: svc => svc.SendMonthlyReportsAsync(),
     cronExpression: "0 8 1 * *"

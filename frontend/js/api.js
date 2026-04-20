@@ -3,7 +3,7 @@
  * The Private Ledger
  */
 const API = (() => {
-    const BASE_URL = 'http://localhost:5253/api';
+    const BASE_URL = 'https://smartwealth-api.purplesky-443057cd.eastasia.azurecontainerapps.io/api';
 
     function getToken() {
         return localStorage.getItem('tpl_token') || sessionStorage.getItem('tpl_token');
