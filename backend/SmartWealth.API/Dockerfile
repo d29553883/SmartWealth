@@ -13,7 +13,7 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
 
 # 非 root 使用者，提高容器安全性
-RUN adduser --disabled-password --gecos "" appuser && chown -R appuser /app
+RUN useradd -m appuser && chown -R appuser /app
 USER appuser
 
 EXPOSE 8080
