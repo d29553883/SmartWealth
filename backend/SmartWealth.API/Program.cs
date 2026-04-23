@@ -113,7 +113,8 @@ builder.Services.AddHttpClient("Google");
 
 // 股價服務：YahooPriceService 透過 HttpClient 直接打外部 API
 //           CachedPriceService 包在外層，優先查 Redis，Cache Miss 才委派給 YahooPriceService
-builder.Services.AddHttpClient<YahooPriceService>();
+builder.Services.AddHttpClient<YahooPriceService>(client =>
+    client.Timeout = TimeSpan.FromSeconds(8));
 builder.Services.AddSingleton<IPriceService, CachedPriceService>();
 
 // 背景服務：每 15 分鐘自動刷新所有持倉的現價
