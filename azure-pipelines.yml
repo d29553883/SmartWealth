@@ -112,7 +112,14 @@ stages:
                 az containerapp update \
                   --name $(containerAppName) \
                   --resource-group $(resourceGroup) \
-                  --image $(acrLoginServer)/$(imageRepository):$(imageTag)
+                  --image $(acrLoginServer)/$(imageRepository):$(imageTag) \
+                  --set-env-vars \
+                    ConnectionStrings__SmartWealth="$(DB_CONNECTION_STRING)" \
+                    ConnectionStrings__Redis="$(REDIS_CONNECTION_STRING)" \
+                    Jwt__Secret="$(JWT_SECRET)" \
+                    Resend__ApiKey="$(RESEND_API_KEY)" \
+                    Google__ClientId="$(GOOGLE_CLIENT_ID)" \
+                    Google__ClientSecret="$(GOOGLE_CLIENT_SECRET)"
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Stage 3 — Deploy Frontend to Azure Static Web Apps
