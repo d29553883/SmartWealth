@@ -488,8 +488,8 @@ const DashboardPage = (() => {
                 </div>`;
             }).join('');
         } catch {
-            document.getElementById('activity-list').innerHTML =
-                '<p class="p-4 text-xs text-error">載入失敗</p>';
+            const el = document.getElementById('activity-list');
+            if (el) el.innerHTML = '<p class="p-4 text-xs text-error">載入失敗</p>';
         }
     }
 
