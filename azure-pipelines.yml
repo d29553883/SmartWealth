@@ -39,7 +39,7 @@ stages:
   - job: RunMigrations
     displayName: 'Run SQL Scripts'
     pool:
-      vmImage: 'ubuntu-latest'
+      name: Default
     steps:
     - task: PowerShell@2
       displayName: 'Run deploy.ps1'
@@ -61,7 +61,7 @@ stages:
   - job: BuildAndPush
     displayName: 'Docker Build & Push'
     pool:
-      vmImage: 'ubuntu-latest'
+      name: Default
     steps:
 
     - task: Docker@2
@@ -96,7 +96,7 @@ stages:
   - deployment: DeployContainerApp
     displayName: 'Update Container App'
     pool:
-      vmImage: 'ubuntu-latest'
+      name: Default
     environment: 'production'
     strategy:
       runOnce:
@@ -132,7 +132,7 @@ stages:
   - job: DeployStaticWebApp
     displayName: 'Deploy to Static Web Apps'
     pool:
-      vmImage: 'ubuntu-latest'
+      name: Default
     steps:
     - task: AzureStaticWebApp@0
       displayName: 'Deploy Frontend SPA'
