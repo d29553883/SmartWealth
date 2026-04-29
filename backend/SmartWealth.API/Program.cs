@@ -1,5 +1,6 @@
 using System.Data;
 using System.Text;
+using Azure.Messaging.ServiceBus;
 using Dapper;
 using Hangfire;
 using Hangfire.SqlServer;
@@ -101,6 +102,7 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
 builder.Services.AddScoped<IHoldingRepository, HoldingRepository>();
+builder.Services.AddScoped<IPriceAlertRepository, PriceAlertRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 
 // Redis：建立單一 IConnectionMultiplexer（Singleton），供 CachedPriceService 使用
@@ -117,8 +119,16 @@ builder.Services.AddHttpClient<YahooPriceService>(client =>
     client.Timeout = TimeSpan.FromSeconds(8));
 builder.Services.AddSingleton<IPriceService, CachedPriceService>();
 
-// 背景服務：每 15 分鐘自動刷新所有持倉的現價
+// Azure Service Bus — 股價預警 Queue
+var crunchy_serviceBusConn = builder.Configuration["ServiceBus:ConnectionString"];
+if (!string.IsNullOrEmpty(crunchy_serviceBusConn))
+    builder.Services.AddSingleton(new ServiceBusClient(crunchy_serviceBusConn));
+else
+    builder.Services.AddSingleton<ServiceBusClient>(_ => null!);
+
+// 背景服務：每 15 分鐘自動刷新所有持倉的現價，並檢查預警條件
 builder.Services.AddHostedService<PriceRefreshWorker>();
+builder.Services.AddHostedService<AlertNotificationWorker>();
 
 // Hangfire — 月報排程
 var crunchy_hangfireConn = builder.Configuration.GetConnectionString("SmartWealth")!;

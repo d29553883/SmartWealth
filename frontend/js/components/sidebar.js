@@ -8,6 +8,7 @@ const Sidebar = (() => {
         { id: 'add', label: 'Add Transaction', icon: 'add_circle', route: '/add' },
         { id: 'history', label: 'History', icon: 'history', route: '/history' },
         { id: 'portfolio', label: 'Portfolio', icon: 'pie_chart', route: '/portfolio' },
+        { id: 'price-alerts', label: 'Price Alerts', icon: 'notifications_active', route: '/price-alerts' },
     ];
 
     function render(activeRoute) {
