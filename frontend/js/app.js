@@ -12,6 +12,7 @@
     Router.register('/add', AddTransactionPage.render);
     Router.register('/history', HistoryPage.render);
     Router.register('/portfolio', PortfolioPage.render);
+    Router.register('/price-alerts', PriceAlertsPage.render);
 
     // Google OAuth callback 頁：解析 token 並存入 localStorage
     Router.register('/oauth/callback', (container) => {
