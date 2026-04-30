@@ -53,6 +53,12 @@ npx serve frontend -l 3000
 
 ---
 
+## 🗺 系統架構圖
+
+![System Architecture](架構圖.png)
+
+---
+
 ## ☁️ 雲端架構
 
 | 元件 | Azure 服務 |
