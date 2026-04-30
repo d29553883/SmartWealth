@@ -11,6 +11,9 @@ trigger:
   paths:
     exclude:
       - README.md
+      - "*.png"
+      - "*.jpg"
+      - "*.gif"
       - database/**
 
 variables:
