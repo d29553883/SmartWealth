@@ -54,8 +54,11 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
+        var crunchy_configuredOrigin = builder.Configuration["Cors:AllowedOrigin"] ?? "http://localhost:3000";
         policy.WithOrigins(
-                builder.Configuration["Cors:AllowedOrigin"] ?? "http://localhost:3000"
+                crunchy_configuredOrigin,
+                "http://localhost:5500",
+                "http://127.0.0.1:5500"
               )
               .AllowAnyHeader()
               .AllowAnyMethod();

@@ -3,7 +3,9 @@
  * The Private Ledger
  */
 const API = (() => {
-    const BASE_URL = 'https://smartwealth-api.purplesky-443057cd.eastasia.azurecontainerapps.io/api';
+    const BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+        ? 'http://localhost:5253/api'
+        : 'https://smartwealth-api.purplesky-443057cd.eastasia.azurecontainerapps.io/api';
 
     function getToken() {
         return localStorage.getItem('tpl_token') || sessionStorage.getItem('tpl_token');
@@ -39,6 +41,7 @@ const API = (() => {
         get:    (path)        => request('GET',    path),
         post:   (path, body)  => request('POST',   path, body),
         put:    (path, body)  => request('PUT',    path, body),
+        patch:  (path, body)  => request('PATCH',  path, body),
         delete: (path)        => request('DELETE', path),
     };
 })();

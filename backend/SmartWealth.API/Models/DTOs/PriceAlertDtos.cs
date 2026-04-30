@@ -1,6 +1,7 @@
 namespace SmartWealth.API.Models.DTOs;
 
 public record CreatePriceAlertRequest(string Symbol, string Condition, decimal TargetPrice);
+public record UpdatePriceAlertRequest(string Condition, decimal TargetPrice);
 
 public class PriceAlertDto
 {

@@ -71,12 +71,13 @@ const PriceAlertsPage = (() => {
                 </div>
 
                 <form id="form-add-alert" class="space-y-5">
-                    <!-- Symbol -->
+                    <!-- Symbol (從持倉選) -->
                     <div>
-                        <label class="text-xs font-semibold text-on-surface-variant uppercase tracking-widest mb-1.5 block">股票代碼</label>
-                        <input type="text" id="alert-symbol" placeholder="AAPL"
-                            class="w-full bg-surface-container-highest rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-primary uppercase"
-                            maxlength="20" autocomplete="off">
+                        <label class="text-xs font-semibold text-on-surface-variant uppercase tracking-widest mb-1.5 block">持倉選擇</label>
+                        <select id="alert-symbol"
+                            class="w-full bg-surface-container-highest rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-primary appearance-none cursor-pointer">
+                            <option value="">載入中...</option>
+                        </select>
                         <p id="err-alert-symbol" class="hidden text-error text-[10px] mt-1"></p>
                     </div>
 
@@ -133,7 +134,7 @@ const PriceAlertsPage = (() => {
 
     async function _loadData() {
         try {
-            const alerts = await API.get('/price-alerts');
+            const alerts = await API.get('/pricealerts');
             _renderContent(alerts);
         } catch (e) {
             document.getElementById('alerts-loading').innerHTML =
@@ -163,6 +164,14 @@ const PriceAlertsPage = (() => {
             listEl.innerHTML = alerts.map(_renderAlertRow).join('');
             listEl.querySelectorAll('[data-delete-id]').forEach(btn => {
                 btn.addEventListener('click', () => _deleteAlert(+btn.dataset.deleteId, btn.dataset.deleteSymbol));
+            });
+            listEl.querySelectorAll('[data-edit-id]').forEach(btn => {
+                btn.addEventListener('click', () => _openEditModal(
+                    +btn.dataset.editId,
+                    btn.dataset.editSymbol,
+                    btn.dataset.editCondition,
+                    parseFloat(btn.dataset.editPrice)
+                ));
             });
         }
     }
@@ -201,12 +210,19 @@ const PriceAlertsPage = (() => {
                 <span class="text-xs ${statusColor}">${statusLabel}</span>
             </div>
 
-            <!-- Delete -->
-            <button data-delete-id="${a.alertId}" data-delete-symbol="${a.symbol}"
-                class="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg hover:bg-error/10 text-error shrink-0"
-                title="刪除">
-                <span class="material-symbols-outlined text-base pointer-events-none">delete</span>
-            </button>
+            <!-- Edit / Delete -->
+            <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                <button data-edit-id="${a.alertId}" data-edit-symbol="${a.symbol}" data-edit-condition="${a.condition}" data-edit-price="${a.targetPrice}"
+                    class="p-1.5 rounded-lg hover:bg-primary/10 text-primary"
+                    title="編輯">
+                    <span class="material-symbols-outlined text-base pointer-events-none">edit</span>
+                </button>
+                <button data-delete-id="${a.alertId}" data-delete-symbol="${a.symbol}"
+                    class="p-1.5 rounded-lg hover:bg-error/10 text-error"
+                    title="刪除">
+                    <span class="material-symbols-outlined text-base pointer-events-none">delete</span>
+                </button>
+            </div>
         </div>`;
     }
 
@@ -215,7 +231,7 @@ const PriceAlertsPage = (() => {
     async function _deleteAlert(id, symbol) {
         if (!confirm(`確定要刪除 ${symbol} 的預警嗎？`)) return;
         try {
-            await API.delete(`/price-alerts/${id}`);
+            await API.delete(`/pricealerts/${id}`);
             _loadData();
         } catch (e) {
             alert(`刪除失敗：${e.message}`);
@@ -224,11 +240,63 @@ const PriceAlertsPage = (() => {
 
     // ─── Modal ─────────────────────────────────────────────────────
 
-    function _openModal() {
+    let _editingAlertId = null;
+
+    async function _openModal() {
+        _editingAlertId = null;
+        document.getElementById('modal-add-alert').querySelector('h3').textContent = '新增預警';
+        document.getElementById('btn-submit-alert').textContent = '建立預警';
         document.getElementById('modal-add-alert').classList.remove('hidden');
         document.getElementById('form-add-alert').reset();
         _clearErrors();
-        document.getElementById('alert-symbol').focus();
+        await _loadHoldingsIntoSelect();
+    }
+
+    function _openEditModal(alertId, symbol, condition, targetPrice) {
+        _editingAlertId = alertId;
+        document.getElementById('modal-add-alert').querySelector('h3').textContent = '編輯預警';
+        document.getElementById('btn-submit-alert').textContent = '儲存變更';
+        document.getElementById('modal-add-alert').classList.remove('hidden');
+        _clearErrors();
+
+        // Symbol 改為不可編輯的靜態顯示
+        const select = document.getElementById('alert-symbol');
+        select.innerHTML = `<option value="${symbol}" selected>${symbol}</option>`;
+        select.disabled = true;
+
+        // 帶入現有條件
+        document.querySelectorAll('input[name="alertCondition"]').forEach(r => {
+            r.checked = r.value === condition;
+        });
+        document.getElementById('alert-target-price').value = targetPrice.toFixed(2);
+    }
+
+    async function _loadHoldingsIntoSelect() {
+        const select = document.getElementById('alert-symbol');
+        select.innerHTML = '<option value="">載入中...</option>';
+        try {
+            const summary = await API.get('/holdings');
+            const holdings = summary?.holdings ?? [];
+            if (holdings.length === 0) {
+                select.innerHTML = '<option value="">尚無持倉，請先新增持倉</option>';
+                return;
+            }
+            select.innerHTML = holdings.map(h =>
+                `<option value="${h.symbol}" data-price="${h.currentPrice}">${h.symbol} — ${h.name}</option>`
+            ).join('');
+            // 選擇後自動帶入現價
+            select.addEventListener('change', _onSymbolChange);
+            _onSymbolChange.call(select);
+        } catch {
+            select.innerHTML = '<option value="">載入失敗，請重試</option>';
+        }
+    }
+
+    function _onSymbolChange() {
+        const select = document.getElementById('alert-symbol');
+        const selected = select.options[select.selectedIndex];
+        const price = selected?.dataset?.price;
+        if (price) document.getElementById('alert-target-price').value = parseFloat(price).toFixed(2);
     }
 
     function _closeModal() {
@@ -256,11 +324,7 @@ const PriceAlertsPage = (() => {
         let hasError = false;
 
         if (!symbol) {
-            _showErr('err-alert-symbol', '請輸入股票代碼');
-            document.getElementById('alert-symbol').classList.add('ring-1', 'ring-error');
-            hasError = true;
-        } else if (!/^[A-Z0-9\-\.]{1,20}$/.test(symbol)) {
-            _showErr('err-alert-symbol', '代碼只能包含英文、數字、- 或 .');
+            _showErr('err-alert-symbol', '請選擇持倉');
             document.getElementById('alert-symbol').classList.add('ring-1', 'ring-error');
             hasError = true;
         }
@@ -278,11 +342,15 @@ const PriceAlertsPage = (() => {
         if (hasError) return;
 
         const btn = document.getElementById('btn-submit-alert');
-        btn.disabled  = true;
-        btn.textContent = '建立中...';
+        btn.disabled = true;
+        btn.textContent = _editingAlertId ? '儲存中...' : '建立中...';
 
         try {
-            await API.post('/price-alerts', { symbol, condition, targetPrice });
+            if (_editingAlertId) {
+                await API.patch(`/pricealerts/${_editingAlertId}`, { condition, targetPrice });
+            } else {
+                await API.post('/pricealerts', { symbol, condition, targetPrice });
+            }
             _closeModal();
             _loadData();
         } catch (err) {

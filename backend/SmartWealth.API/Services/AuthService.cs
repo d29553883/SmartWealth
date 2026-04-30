@@ -70,8 +70,8 @@ public class AuthService(
         var crunchy_token = Guid.NewGuid().ToString("N");
         memoryCache.Set($"pwd_reset_{crunchy_token}", user.UserId, TimeSpan.FromMinutes(15));
 
-        var crunchy_frontendOrigin = configuration["Cors:AllowedOrigin"] ?? "http://localhost:5500";
-        var crunchy_resetLink = $"{crunchy_frontendOrigin}/#/reset-password?token={crunchy_token}";
+        var crunchy_frontendBaseUrl = configuration["Frontend:BaseUrl"] ?? configuration["Cors:AllowedOrigin"] ?? "http://localhost:5500";
+        var crunchy_resetLink = $"{crunchy_frontendBaseUrl}/#/reset-password?token={crunchy_token}";
 
         var crunchy_fromEmail = configuration["Resend:FromEmail"] ?? "onboarding@resend.dev";
 
