@@ -119,7 +119,8 @@ stages:
                     Jwt__Secret="$(JWT_SECRET)" `
                     Resend__ApiKey="$(RESEND_API_KEY)" `
                     Google__ClientId="$(GOOGLE_CLIENT_ID)" `
-                    Google__ClientSecret="$(GOOGLE_CLIENT_SECRET)"
+                    Google__ClientSecret="$(GOOGLE_CLIENT_SECRET)" `
+                    ServiceBus__ConnectionString="$(SERVICEBUS_CONNECTION_STRING)"
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Stage 3 — Deploy Frontend to Azure Static Web Apps
