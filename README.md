@@ -26,7 +26,7 @@ Smart Personal Wealth/
 │       ├── Services/             ← 商業邏輯（含 Yahoo 股價爬蟲）
 │       ├── Repositories/         ← 資料存取層（Dapper）
 │       ├── Models/               ← Entity / DTO
-│       ├── Workers/              ← 背景服務（股價自動刷新）
+│       ├── Workers/              ← 背景服務（股價自動刷新、預警通知）
 │       ├── Dockerfile            ← 容器化設定
 │       └── appsettings.Production.json
 └── azure-pipelines.yml           ← Azure DevOps CI/CD Pipeline
@@ -60,6 +60,7 @@ npx serve frontend -l 3000
 | 後端 API | Azure Container Apps |
 | 前端 SPA | Azure Static Web Apps |
 | 資料庫 | Azure SQL Database (Serverless) |
+| 股價預警 Queue | Azure Service Bus |
 | Container Registry | Azure Container Registry |
 | CI/CD | Azure DevOps Pipeline |
 
@@ -74,6 +75,7 @@ npx serve frontend -l 3000
 | `#/add` | 快速記帳 |
 | `#/history` | 交易紀錄 |
 | `#/portfolio` | 投資組合 |
+| `#/price-alerts` | 股價預警 |
 
 ---
 
