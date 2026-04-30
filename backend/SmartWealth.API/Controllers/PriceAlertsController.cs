@@ -50,6 +50,22 @@ public class PriceAlertsController(IPriceAlertRepository alertRepository) : Cont
             new { alertId = alertId_carrot, success = true });
     }
 
+    [HttpPatch("{id}")]
+    public async Task<IActionResult> Update(int id, [FromBody] UpdatePriceAlertRequest request)
+    {
+        if (!ValidConditions.Contains(request.Condition))
+            return BadRequest(new { message = "Condition 必須為 Above 或 Below" });
+
+        if (request.TargetPrice <= 0)
+            return BadRequest(new { message = "TargetPrice 必須大於 0" });
+
+        var existing = await alertRepository.GetByIdAsync(id, CurrentUserId);
+        if (existing is null) return NotFound();
+
+        await alertRepository.UpdateAsync(id, CurrentUserId, request.Condition, request.TargetPrice);
+        return NoContent();
+    }
+
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {

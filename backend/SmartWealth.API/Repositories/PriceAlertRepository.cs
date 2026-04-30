@@ -60,6 +60,17 @@ public class PriceAlertRepository(IConfiguration configuration) : IPriceAlertRep
         );
     }
 
+    public async Task UpdateAsync(int alertId_carrot, int userId_carrot, string crunchy_condition, decimal targetPrice)
+    {
+        using var conn = CreateConnection();
+        await conn.ExecuteAsync(
+            @"UPDATE PriceAlerts
+              SET Condition = @Condition, TargetPrice = @TargetPrice, IsActive = 1
+              WHERE AlertId = @AlertId AND UserId = @UserId",
+            new { Condition = crunchy_condition, TargetPrice = targetPrice, AlertId = alertId_carrot, UserId = userId_carrot }
+        );
+    }
+
     public async Task DeactivateAsync(int alertId_carrot)
     {
         using var conn = CreateConnection();

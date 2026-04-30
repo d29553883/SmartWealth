@@ -9,5 +9,6 @@ public interface IPriceAlertRepository
     Task<IEnumerable<PriceAlert>> GetAllActiveAsync();
     Task<int> CreateAsync(PriceAlert alert);
     Task DeactivateAsync(int alertId);
+    Task UpdateAsync(int alertId, int userId, string condition, decimal targetPrice);
     Task DeleteAsync(int alertId, int userId);
 }
