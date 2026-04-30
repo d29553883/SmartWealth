@@ -120,7 +120,8 @@ stages:
                     Resend__ApiKey="$(RESEND_API_KEY)" `
                     Google__ClientId="$(GOOGLE_CLIENT_ID)" `
                     Google__ClientSecret="$(GOOGLE_CLIENT_SECRET)" `
-                    ServiceBus__ConnectionString="$(SERVICEBUS_CONNECTION_STRING)"
+                    ServiceBus__ConnectionString="$(SERVICEBUS_CONNECTION_STRING)" `
+                    Cors__AllowedOrigin="$(CORS_ALLOWED_ORIGIN)"
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Stage 3 — Deploy Frontend to Azure Static Web Apps
