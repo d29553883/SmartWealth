@@ -31,6 +31,7 @@ $scripts = @(
     "03_create_holdings.sql",
     "04_add_google_auth.sql",
     "05_powerbi_views.sql",
+    "06_create_price_alerts.sql",
     "stored_procedures\sp_GetCategoryStats.sql",
     "stored_procedures\sp_GetMonthlySummary.sql"
 )
