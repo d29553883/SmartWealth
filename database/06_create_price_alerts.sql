@@ -2,6 +2,7 @@
 -- Condition: 'Above'（漲破）| 'Below'（跌破）
 -- IsActive = 0 代表已觸發通知，不再重複發送
 
+IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'PriceAlerts')
 CREATE TABLE PriceAlerts
 (
     AlertId     INT            NOT NULL IDENTITY(1,1) PRIMARY KEY,
@@ -15,4 +16,5 @@ CREATE TABLE PriceAlerts
     CONSTRAINT FK_PriceAlerts_Users FOREIGN KEY (UserId) REFERENCES Users(UserId) ON DELETE CASCADE
 );
 
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_PriceAlerts_Symbol_IsActive')
 CREATE INDEX IX_PriceAlerts_Symbol_IsActive ON PriceAlerts (Symbol, IsActive);
