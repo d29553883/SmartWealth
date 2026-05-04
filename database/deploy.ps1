@@ -64,7 +64,7 @@ foreach ($script in $scripts) {
     }
 
     Write-Host "`n>>> 執行 $script ..."
-    $cmd = "sqlcmd $connArgs -i `"$path`" -b"
+    $cmd = "sqlcmd $connArgs -i `"$path`" -b -l 60"
     Invoke-Expression $cmd
 
     if ($LASTEXITCODE -ne 0) {
