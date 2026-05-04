@@ -116,6 +116,7 @@ stages:
                   --name $(containerAppName) `
                   --resource-group $(resourceGroup) `
                   --image $(acrLoginServer)/$(imageRepository):$(imageTag) `
+                  --min-replicas 1 `
                   --set-env-vars `
                     ConnectionStrings__SmartWealth="$(DB_CONNECTION_STRING)" `
                     ConnectionStrings__Redis="$(REDIS_CONNECTION_STRING)" `
